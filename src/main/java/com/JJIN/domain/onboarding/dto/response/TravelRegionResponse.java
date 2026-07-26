@@ -16,7 +16,7 @@ public record TravelRegionResponse(
 	@Schema(description = "TourAPI KorService2 법정동 시도 코드(lDongRegnCd)", example = "11")
 	String lDongRegnCd,
 
-	@Schema(description = "TourAPI KorService2 법정동 시군구 코드(lDongSignguCd)", example = "11000")
+	@Schema(description = "TourAPI KorService2 법정동 시군구 코드(lDongSignguCd)", example = "110", nullable = true)
 	String lDongSignguCd
 ) {
 

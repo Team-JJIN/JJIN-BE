@@ -140,7 +140,7 @@ public interface OnboardingControllerDocs {
 				      "id": 1,
 				      "displayName": "서울",
 				      "lDongRegnCd": "11",
-				      "lDongSignguCd": "11000"
+				      "lDongSignguCd": null
 				    }
 				  ]
 				}

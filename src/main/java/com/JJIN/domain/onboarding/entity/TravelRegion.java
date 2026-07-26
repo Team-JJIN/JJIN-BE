@@ -43,7 +43,7 @@ public class TravelRegion extends BaseTimeEntity {
 	@Column(name = "ldong_regn_cd", nullable = false, length = 2)
 	private String lDongRegnCd;
 
-	@Column(name = "ldong_signgu_cd", nullable = false, length = 5)
+	@Column(name = "ldong_signgu_cd", length = 3)
 	private String lDongSignguCd;
 
 	@Builder(access = AccessLevel.PRIVATE)
