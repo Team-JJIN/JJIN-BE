@@ -40,14 +40,10 @@ public class MissionProofImage {
 	@Column(nullable = false, length = 2048)
 	private String imageUrl;
 
-	@Column(nullable = false)
-	private int sortOrder;
-
-	public static MissionProofImage of(final MissionProof proof, final String imageUrl, final int sortOrder) {
+	public static MissionProofImage of(final MissionProof proof, final String imageUrl) {
 		return MissionProofImage.builder()
 			.proof(proof)
 			.imageUrl(imageUrl)
-			.sortOrder(sortOrder)
 			.build();
 	}
 }

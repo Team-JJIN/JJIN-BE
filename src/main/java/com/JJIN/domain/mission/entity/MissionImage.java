@@ -1,11 +1,7 @@
 package com.JJIN.domain.mission.entity;
 
-import com.JJIN.domain.mission.entity.enums.MissionImageType;
-
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -44,24 +40,13 @@ public class MissionImage {
 	@Column(nullable = false, length = 2048)
 	private String imageUrl;
 
-	@Column(nullable = false)
-	private int sortOrder;
-
-	@Enumerated(EnumType.STRING)
-	@Column(nullable = false, length = 20)
-	private MissionImageType imageType;
-
 	public static MissionImage of(
 		final Mission mission,
-		final String imageUrl,
-		final int sortOrder,
-		final MissionImageType imageType
+		final String imageUrl
 	) {
 		return MissionImage.builder()
 			.mission(mission)
 			.imageUrl(imageUrl)
-			.sortOrder(sortOrder)
-			.imageType(imageType)
 			.build();
 	}
 }
