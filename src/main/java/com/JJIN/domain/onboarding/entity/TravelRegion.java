@@ -11,7 +11,6 @@ import jakarta.persistence.Index;
 import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
 import lombok.AccessLevel;
-import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
@@ -45,27 +44,4 @@ public class TravelRegion extends BaseTimeEntity {
 
 	@Column(name = "ldong_signgu_cd", length = 3)
 	private String lDongSignguCd;
-
-	@Builder(access = AccessLevel.PRIVATE)
-	private TravelRegion(
-		final String displayName,
-		final String lDongRegnCd,
-		final String lDongSignguCd
-	) {
-		this.displayName = displayName;
-		this.lDongRegnCd = lDongRegnCd;
-		this.lDongSignguCd = lDongSignguCd;
-	}
-
-	public static TravelRegion create(
-		final String displayName,
-		final String lDongRegnCd,
-		final String lDongSignguCd
-	) {
-		return TravelRegion.builder()
-			.displayName(displayName)
-			.lDongRegnCd(lDongRegnCd)
-			.lDongSignguCd(lDongSignguCd)
-			.build();
-	}
 }
