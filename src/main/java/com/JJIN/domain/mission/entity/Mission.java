@@ -4,6 +4,7 @@ import com.JJIN.domain.member.entity.Member;
 import com.JJIN.domain.mission.entity.enums.MissionDifficulty;
 import com.JJIN.domain.mission.entity.enums.MissionSourceType;
 import com.JJIN.domain.mission.entity.enums.MissionStatus;
+import com.JJIN.domain.onboarding.entity.enums.TourApiContentType;
 import com.JJIN.global.common.BaseTimeEntity;
 
 import jakarta.persistence.Column;
@@ -45,15 +46,16 @@ public class Mission extends BaseTimeEntity {
 	@Column(nullable = false, length = 20)
 	private MissionDifficulty difficulty;
 
-	// TODO: category, reigion, storeName 추후 enum 화 논의 필요
-	@Column(nullable = false, length = 100)
-	private String storeName;
+	@Enumerated(EnumType.STRING)
+	@Column(name = "category", length = 30)
+	private TourApiContentType category;
 
-	@Column(length = 50)
-	private String category;
-
+	// TODO: region 추후 enum 화 논의 필요
 	@Column(length = 100)
 	private String region;
+
+	@Column(name = "image_url", length = 2048)
+	private String imageUrl;
 
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "created_by_member_id", nullable = false)
@@ -77,9 +79,9 @@ public class Mission extends BaseTimeEntity {
 		final String title,
 		final String description,
 		final MissionDifficulty difficulty,
-		final String storeName,
-		final String category,
+		final TourApiContentType category,
 		final String region,
+		final String imageUrl,
 		final Member createdBy,
 		final MissionSourceType sourceType,
 		final boolean recommended
@@ -88,9 +90,9 @@ public class Mission extends BaseTimeEntity {
 			.title(title)
 			.description(description)
 			.difficulty(difficulty)
-			.storeName(storeName)
 			.category(category)
 			.region(region)
+			.imageUrl(imageUrl)
 			.createdBy(createdBy)
 			.sourceType(sourceType)
 			.status(MissionStatus.ACTIVE)

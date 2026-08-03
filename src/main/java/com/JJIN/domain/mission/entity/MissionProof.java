@@ -48,6 +48,9 @@ public class MissionProof extends BaseTimeEntity {
 	@Column(nullable = false, length = 500)
 	private String content;
 
+	@Column(name = "image_url", nullable = false, length = 2048)
+	private String imageUrl;
+
 	@Builder.Default
 	@Column(nullable = false)
 	private int likeCount = 0;
@@ -59,12 +62,14 @@ public class MissionProof extends BaseTimeEntity {
 	public static MissionProof of(
 		final Mission mission,
 		final Member member,
-		final String content
+		final String content,
+		final String imageUrl
 	) {
 		return MissionProof.builder()
 			.mission(mission)
 			.member(member)
 			.content(content)
+			.imageUrl(imageUrl)
 			.build();
 	}
 }
