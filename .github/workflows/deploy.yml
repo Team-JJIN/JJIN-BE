@@ -56,7 +56,7 @@ jobs:
           host: ${{ secrets.EC2_HOST }}
           username: ${{ secrets.EC2_USER }}
           key: ${{ secrets.EC2_SSH_KEY }}
-          source: "docker-compose.yml,.env"
+          source: "docker-compose.yml,.env,nginx"
           target: "/home/ubuntu/jjin-server"
 
       - name: Deploy on EC2 via SSH

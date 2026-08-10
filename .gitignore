@@ -40,3 +40,6 @@ out/
 
 ### Docker / Infra ###
 .env
+
+### Certificates (서버 전용 비밀 파일, 커밋 금지) ###
+certbot/
