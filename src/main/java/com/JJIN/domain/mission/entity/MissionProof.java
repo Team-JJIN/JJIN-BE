@@ -72,4 +72,14 @@ public class MissionProof extends BaseTimeEntity {
 			.imageUrl(imageUrl)
 			.build();
 	}
+
+	public void increaseLikeCount() {
+		this.likeCount++;
+	}
+
+	public void decreaseLikeCount() {
+		if (this.likeCount > 0) {
+			this.likeCount--;
+		}
+	}
 }
