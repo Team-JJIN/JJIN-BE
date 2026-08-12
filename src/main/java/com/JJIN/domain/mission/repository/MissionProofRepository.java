@@ -1,15 +1,24 @@
 package com.JJIN.domain.mission.repository;
 
+import java.util.Optional;
+
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import com.JJIN.domain.mission.entity.HotMissionSnapshot;
 import com.JJIN.domain.mission.entity.MissionProof;
 
+import jakarta.persistence.LockModeType;
+
 public interface MissionProofRepository extends JpaRepository<MissionProof, Long> {
+
+	@Lock(LockModeType.PESSIMISTIC_WRITE)
+	@Query("select mp from MissionProof mp where mp.id = :proofId")
+	Optional<MissionProof> findByIdForUpdate(@Param("proofId") Long proofId);
 
 	/**
 	 * 최신순 피드. mission/member를 fetch join 하여 N+1을 방지한다.

@@ -82,4 +82,8 @@ public class MissionProof extends BaseTimeEntity {
 			this.likeCount--;
 		}
 	}
+
+	public void increaseCommentCount() {
+		this.commentCount++;
+	}
 }

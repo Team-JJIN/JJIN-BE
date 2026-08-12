@@ -81,7 +81,7 @@ public class MissionProofService {
 
 	@Transactional
 	public MissionProofLikeToggleResponse toggleLike(final Long memberId, final Long proofId) {
-		MissionProof proof = missionProofRepository.findById(proofId)
+		MissionProof proof = missionProofRepository.findByIdForUpdate(proofId)
 			.orElseThrow(() -> new JjinException(MissionErrorCode.MISSION_PROOF_NOT_FOUND));
 
 		Optional<MissionProofLike> existing =
