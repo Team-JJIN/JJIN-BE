@@ -70,11 +70,6 @@ public class Mission extends BaseTimeEntity {
 	@Column(nullable = false, length = 20)
 	private MissionStatus status = MissionStatus.ACTIVE;
 
-	// TODO: 인기 미션 기준이 확정되면 MissionStats 같은 별도 집계 모델로 분리한다.
-	@Builder.Default
-	@Column(name = "is_recommended", nullable = false)
-	private boolean recommended = false;
-
 	public static Mission create(
 		final String title,
 		final String description,
@@ -83,8 +78,7 @@ public class Mission extends BaseTimeEntity {
 		final String region,
 		final String imageUrl,
 		final Member createdBy,
-		final MissionSourceType sourceType,
-		final boolean recommended
+		final MissionSourceType sourceType
 	) {
 		return Mission.builder()
 			.title(title)
@@ -96,7 +90,6 @@ public class Mission extends BaseTimeEntity {
 			.createdBy(createdBy)
 			.sourceType(sourceType)
 			.status(MissionStatus.ACTIVE)
-			.recommended(recommended)
 			.build();
 	}
 }
