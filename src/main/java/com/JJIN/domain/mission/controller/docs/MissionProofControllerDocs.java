@@ -2,6 +2,9 @@ package com.JJIN.domain.mission.controller.docs;
 
 import org.springframework.http.ResponseEntity;
 
+import com.JJIN.domain.mission.dto.request.MissionProofCommentCreateRequest;
+import com.JJIN.domain.mission.dto.response.MissionProofCommentCreateResponse;
+import com.JJIN.domain.mission.dto.response.MissionProofCommentListResponse;
 import com.JJIN.domain.mission.dto.response.MissionProofFeedResponse;
 import com.JJIN.domain.mission.dto.response.MissionProofLikeToggleResponse;
 import com.JJIN.domain.mission.entity.enums.MissionProofFeedTab;
@@ -113,5 +116,84 @@ public interface MissionProofControllerDocs {
 	ResponseEntity<SuccessResponse<MissionProofLikeToggleResponse>> toggleMissionProofLike(
 		@CurrentMember CurrentAuth currentAuth,
 		@Parameter(description = "인증글 ID", example = "1") Long proofId
+	);
+
+	@Operation(
+		summary = "미션 인증 댓글 목록 조회",
+		description = """
+			특정 미션 인증글의 댓글을 오래된 댓글부터 페이지 단위로 조회한다.
+
+			- page는 0부터 시작하며 기본값은 0이다.
+			- size의 기본값은 20이며 최대 50으로 제한된다.
+			- 댓글 작성자 응답에는 프로필 이미지 URL을 포함하지 않는다.
+			""",
+		security = @SecurityRequirement(name = "BearerAuth")
+	)
+	@ApiResponse(
+		responseCode = "200",
+		description = "미션 인증 댓글 목록 조회 성공",
+		content = @Content(
+			mediaType = "application/json",
+			examples = @ExampleObject(value = """
+				{
+				  "status": 200,
+				  "message": "미션 인증 댓글 목록을 조회했습니다.",
+				  "data": {
+				    "proofId": 1,
+				    "comments": [
+				      {
+				        "commentId": 10,
+				        "author": {
+				          "memberId": 2,
+				          "nickname": "서연"
+				        },
+				        "content": "여기 진짜 맛있어 보여요!",
+				        "createdAt": "2026-08-13T14:27:00"
+				      }
+				    ],
+				    "page": 0,
+				    "size": 20,
+				    "hasNext": false
+				  }
+				}
+				""")
+		)
+	)
+	ResponseEntity<SuccessResponse<MissionProofCommentListResponse>> getMissionProofComments(
+		@CurrentMember CurrentAuth currentAuth,
+		@Parameter(description = "미션 인증글 ID", example = "1") Long proofId,
+		@Parameter(description = "페이지 번호(0부터)", example = "0") int page,
+		@Parameter(description = "페이지 크기(최대 50)", example = "20") int size
+	);
+
+	@Operation(
+		summary = "미션 인증 댓글 작성",
+		description = "특정 미션 인증글에 최대 500자의 댓글을 작성한다.",
+		security = @SecurityRequirement(name = "BearerAuth")
+	)
+	@ApiResponse(
+		responseCode = "200",
+		description = "미션 인증 댓글 작성 성공",
+		content = @Content(
+			mediaType = "application/json",
+			examples = @ExampleObject(value = """
+				{
+				  "status": 200,
+				  "message": "미션 인증 댓글을 작성했습니다.",
+				  "data": {
+				    "commentId": 10,
+				    "proofId": 1,
+				    "content": "여기 진짜 맛있어 보여요!",
+				    "createdAt": "2026-08-13T14:30:00",
+				    "commentCount": 1
+				  }
+				}
+				""")
+		)
+	)
+	ResponseEntity<SuccessResponse<MissionProofCommentCreateResponse>> createMissionProofComment(
+		@CurrentMember CurrentAuth currentAuth,
+		@Parameter(description = "미션 인증글 ID", example = "1") Long proofId,
+		MissionProofCommentCreateRequest request
 	);
 }
