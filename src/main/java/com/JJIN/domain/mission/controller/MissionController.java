@@ -10,11 +10,13 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.JJIN.domain.mission.controller.docs.MissionControllerDocs;
+import com.JJIN.domain.mission.dto.response.HotMissionListResponse;
 import com.JJIN.domain.mission.dto.response.MissionDetailResponse;
 import com.JJIN.domain.mission.dto.response.MissionSearchFeedResponse;
-import com.JJIN.domain.mission.exception.MissionSuccessCode;
-import com.JJIN.domain.mission.service.MissionService;
 import com.JJIN.domain.mission.entity.enums.MissionDifficulty;
+import com.JJIN.domain.mission.exception.MissionSuccessCode;
+import com.JJIN.domain.mission.service.HotMissionService;
+import com.JJIN.domain.mission.service.MissionService;
 import com.JJIN.domain.onboarding.entity.enums.TourApiContentType;
 import com.JJIN.global.auth.annotation.CurrentMember;
 import com.JJIN.global.auth.dto.CurrentAuth;
@@ -30,6 +32,7 @@ import lombok.RequiredArgsConstructor;
 public class MissionController implements MissionControllerDocs {
 
 	private final MissionService missionService;
+	private final HotMissionService hotMissionService;
 
 	@Override
 	@GetMapping
@@ -64,6 +67,13 @@ public class MissionController implements MissionControllerDocs {
 		validateAuthenticated(currentAuth);
 		MissionDetailResponse response = missionService.getMission(currentAuth.memberId(), missionId);
 		return ResponseEntity.ok(SuccessResponse.of(MissionSuccessCode.MISSION_DETAIL_SUCCESS, response));
+	}
+
+	@Override
+	@GetMapping("/hot")
+	public ResponseEntity<SuccessResponse<HotMissionListResponse>> getHotMissions() {
+		HotMissionListResponse response = hotMissionService.getCurrentHotMissions();
+		return ResponseEntity.ok(SuccessResponse.of(MissionSuccessCode.HOT_MISSION_LIST_SUCCESS, response));
 	}
 
 	private void validateAuthenticated(final CurrentAuth currentAuth) {

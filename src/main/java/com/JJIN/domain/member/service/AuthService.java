@@ -68,7 +68,12 @@ public class AuthService {
 		}
 
 		Member member = memberRepository.save(
-			Member.create(request.email(), passwordEncoder.encode(request.password()), Role.ONBOARDING)
+			Member.create(
+				request.email(),
+				request.nickname(),
+				passwordEncoder.encode(request.password()),
+				Role.ONBOARDING
+			)
 		);
 		termsService.saveAgreements(member.getId(), request.termsAgreements());
 		emailVerificationCodeStore.deleteVerified(request.email());
@@ -132,7 +137,7 @@ public class AuthService {
 	private Member registerNewMember(final GoogleUserInfo userInfo) {
 		log.info("신규 구글 회원 가입: socialId={}, email={}", userInfo.sub(), userInfo.email());
 		return memberRepository.save(
-			Member.createSocialMember(userInfo.email(), userInfo.sub(), Role.ONBOARDING)
+			Member.createSocialMember(userInfo.email(), userInfo.name(), userInfo.sub(), Role.ONBOARDING)
 		);
 	}
 
