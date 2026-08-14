@@ -3,6 +3,7 @@ package com.JJIN.domain.mission.repository;
 import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.List;
+import java.util.Set;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -12,6 +13,19 @@ import com.JJIN.domain.mission.entity.UserMission;
 import com.JJIN.domain.mission.repository.dto.MissionMetricProjection;
 
 public interface UserMissionRepository extends JpaRepository<UserMission, Long> {
+
+	@Query("""
+		select um.mission.id
+		from UserMission um
+		where um.member.id = :memberId
+		and um.mission.id in :missionIds
+		""")
+	Set<Long> findMissionIdsByMemberIdAndMissionIdIn(
+		@Param("memberId") Long memberId,
+		@Param("missionIds") Collection<Long> missionIds
+	);
+
+	boolean existsByMemberIdAndMissionId(Long memberId, Long missionId);
 
 	/**
 	 * 기간 [start, end) 동안 미션별 추가(담기) 횟수를 집계한다.
