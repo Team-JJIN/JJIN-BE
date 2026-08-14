@@ -21,25 +21,28 @@ import lombok.NoArgsConstructor;
 
 @Entity
 @Table(
-	name = "mission_proof",
+	name = "mission_proof_comment",
 	indexes = {
-		@Index(name = "idx_mission_proof_mission_id", columnList = "mission_id"),
-		@Index(name = "idx_mission_proof_member_id", columnList = "member_id")
+		@Index(
+			name = "idx_mission_proof_comment_proof_created",
+			columnList = "mission_proof_id, created_at, id"
+		),
+		@Index(name = "idx_mission_proof_comment_member_id", columnList = "member_id")
 	}
 )
 @Getter
 @Builder
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor
-public class MissionProof extends BaseTimeEntity {
+public class MissionProofComment extends BaseTimeEntity {
 
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long id;
 
 	@ManyToOne(fetch = FetchType.LAZY)
-	@JoinColumn(name = "mission_id", nullable = false)
-	private Mission mission;
+	@JoinColumn(name = "mission_proof_id", nullable = false)
+	private MissionProof missionProof;
 
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "member_id", nullable = false)
@@ -48,42 +51,15 @@ public class MissionProof extends BaseTimeEntity {
 	@Column(nullable = false, length = 500)
 	private String content;
 
-	@Column(name = "image_url", nullable = false, length = 2048)
-	private String imageUrl;
-
-	@Builder.Default
-	@Column(nullable = false)
-	private int likeCount = 0;
-
-	@Builder.Default
-	@Column(nullable = false)
-	private int commentCount = 0;
-
-	public static MissionProof of(
-		final Mission mission,
+	public static MissionProofComment of(
+		final MissionProof missionProof,
 		final Member member,
-		final String content,
-		final String imageUrl
+		final String content
 	) {
-		return MissionProof.builder()
-			.mission(mission)
+		return MissionProofComment.builder()
+			.missionProof(missionProof)
 			.member(member)
 			.content(content)
-			.imageUrl(imageUrl)
 			.build();
-	}
-
-	public void increaseLikeCount() {
-		this.likeCount++;
-	}
-
-	public void decreaseLikeCount() {
-		if (this.likeCount > 0) {
-			this.likeCount--;
-		}
-	}
-
-	public void increaseCommentCount() {
-		this.commentCount++;
 	}
 }
