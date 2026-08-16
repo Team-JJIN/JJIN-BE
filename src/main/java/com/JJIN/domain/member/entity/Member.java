@@ -25,6 +25,9 @@ public class Member {
     private String email;
 
     @Column
+    private String nickname;
+
+    @Column
     private String password;
 
     @Column
@@ -36,11 +39,13 @@ public class Member {
 
     public static Member create(
         final String email,
+        final String nickname,
         final String password,
         final Role role
     ) {
         return Member.builder()
             .email(email)
+            .nickname(nickname)
             .password(password)
             .role(role)
             .build();
@@ -48,11 +53,13 @@ public class Member {
 
     public static Member createSocialMember(
         final String email,
+        final String nickname,
         final String socialId,
         final Role role
     ) {
         return Member.builder()
             .email(email)
+            .nickname(nickname)
             .socialId(socialId)
             .role(role)
             .build();
