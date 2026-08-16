@@ -23,6 +23,7 @@ public enum MissionSuccessCode implements BaseCode {
 	MISSION_PROOF_COMMENT_CREATE_SUCCESS(HttpStatus.OK, "미션 인증 댓글을 작성했습니다."),
 	MISSION_CREATE_SUCCESS(HttpStatus.OK, "요청이 성공적으로 수행되었습니다."),
 	PRESIGNED_URL_SUCCESS(HttpStatus.OK, "Presigned URL이 생성되었습니다."),
+	MISSION_ADD_TO_PLAN_SUCCESS(HttpStatus.OK, "찜 설정이 완료되었습니다."),
 	;
 
 	private final HttpStatus httpStatus;

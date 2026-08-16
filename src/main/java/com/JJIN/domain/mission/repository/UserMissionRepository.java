@@ -3,6 +3,7 @@ package com.JJIN.domain.mission.repository;
 import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -13,6 +14,8 @@ import com.JJIN.domain.mission.entity.UserMission;
 import com.JJIN.domain.mission.repository.dto.MissionMetricProjection;
 
 public interface UserMissionRepository extends JpaRepository<UserMission, Long> {
+
+	Optional<UserMission> findByTravelPlanIdAndMissionId(Long travelPlanId, Long missionId);
 
 	@Query("""
 		select um.mission.id

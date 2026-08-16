@@ -32,6 +32,7 @@ import com.JJIN.global.auth.jwt.exception.TokenErrorCode;
 import com.JJIN.global.exception.JjinException;
 import com.JJIN.global.response.dto.SuccessResponse;
 
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
 @RestController

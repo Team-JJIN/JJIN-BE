@@ -1,5 +1,6 @@
 package com.JJIN.domain.mission.service;
 
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -7,6 +8,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.UUID;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -16,22 +18,34 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.JJIN.domain.member.entity.Member;
+import com.JJIN.domain.member.repository.MemberRepository;
 import com.JJIN.domain.mission.dto.internal.MissionSearchCondition;
 import com.JJIN.domain.mission.dto.internal.MissionSearchResult;
+import com.JJIN.domain.mission.dto.request.CreateMissionRequest;
+import com.JJIN.domain.mission.dto.response.AddMissionToPlansResponse;
 import com.JJIN.domain.mission.dto.response.MissionCardResponse;
 import com.JJIN.domain.mission.dto.response.MissionDetailResponse;
 import com.JJIN.domain.mission.dto.response.MissionSearchFeedResponse;
+import com.JJIN.domain.mission.dto.response.PresignedUrlResponse;
 import com.JJIN.domain.mission.entity.Mission;
+import com.JJIN.domain.mission.entity.MissionTag;
 import com.JJIN.domain.mission.entity.MissionTagMapping;
+import com.JJIN.domain.mission.entity.UserMission;
 import com.JJIN.domain.mission.entity.enums.MissionDifficulty;
 import com.JJIN.domain.mission.entity.enums.MissionSortOption;
+import com.JJIN.domain.mission.entity.enums.MissionSourceType;
 import com.JJIN.domain.mission.entity.enums.MissionStatus;
 import com.JJIN.domain.mission.exception.MissionErrorCode;
 import com.JJIN.domain.mission.repository.MissionRepository;
 import com.JJIN.domain.mission.repository.MissionTagMappingRepository;
+import com.JJIN.domain.mission.repository.MissionTagRepository;
 import com.JJIN.domain.mission.repository.UserMissionRepository;
+import com.JJIN.domain.onboarding.entity.TravelPlan;
 import com.JJIN.domain.onboarding.entity.enums.TourApiContentType;
+import com.JJIN.domain.onboarding.repository.TravelPlanRepository;
 import com.JJIN.global.exception.JjinException;
+import com.JJIN.global.s3.S3PresignedUrlService;
 
 import lombok.RequiredArgsConstructor;
 
@@ -53,7 +67,6 @@ public class MissionService {
 	private final MissionCategoryClassifier missionCategoryClassifier;
 	private final S3PresignedUrlService s3PresignedUrlService;
 	private final TravelPlanRepository travelPlanRepository;
-	private final TravelPlanMissionRepository travelPlanMissionRepository;
 
 	@Transactional(readOnly = true)
 	public MissionSearchFeedResponse searchMissions(
@@ -175,10 +188,10 @@ public class MissionService {
 			if (!plan.getMember().getId().equals(memberId)) {
 				throw new JjinException(MissionErrorCode.NOT_PLAN_OWNER);
 			}
-			TravelPlanMission link = travelPlanMissionRepository
+			UserMission userMission = userMissionRepository
 				.findByTravelPlanIdAndMissionId(planId, missionId)
-				.orElseGet(() -> travelPlanMissionRepository.save(TravelPlanMission.create(plan, mission)));
-			likes.add(new AddMissionToPlansResponse.LikeItem(link.getId(), planId));
+				.orElseGet(() -> userMissionRepository.save(UserMission.add(plan.getMember(), mission, plan)));
+			likes.add(new AddMissionToPlansResponse.LikeItem(userMission.getId(), planId));
 		}
 		return AddMissionToPlansResponse.of(likes);
 	}
