@@ -28,6 +28,15 @@ spring:
       host: ${REDIS_HOST}
       port: 6379
 
+  ai:
+    openai:
+      api-key: ${RUNYOUR_AI_API_KEY}
+      base-url: ${RUNYOUR_AI_BASE_URL}
+      chat:
+        options:
+          model: ${RUNYOUR_AI_MODEL}
+          temperature: 0.0
+
   mail:
     host: smtp.gmail.com
     port: 587
@@ -71,6 +80,14 @@ auth:
     code-length: 6
     code-ttl-seconds: 300
     verified-ttl-seconds: 1800
+
+aws:
+  region: ${AWS_REGION}
+  s3:
+    bucket: ${AWS_S3_BUCKET}
+  credentials:
+    access-key: ${AWS_ACCESS_KEY}
+    secret-key: ${AWS_SECRET_KEY}
 
 springdoc:
   swagger-ui:
