@@ -74,6 +74,7 @@ public class OnboardingService {
 
 		TravelPlan travelPlan = TravelPlan.create(
 			member,
+			request.name(),
 			region,
 			request.isRegionUndecided(),
 			request.startDate(),
