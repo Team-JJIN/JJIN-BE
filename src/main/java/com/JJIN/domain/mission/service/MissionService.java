@@ -196,6 +196,23 @@ public class MissionService {
 		return AddMissionToPlansResponse.of(likes);
 	}
 
+	@Transactional
+	public void removeMissionFromPlans(
+		final Long memberId,
+		final Long missionId,
+		final List<Long> planIds
+	) {
+		for (Long planId : planIds) {
+			userMissionRepository.findByTravelPlanIdAndMissionId(planId, missionId)
+				.ifPresent(userMission -> {
+					if (!userMission.getMember().getId().equals(memberId)) {
+						throw new JjinException(MissionErrorCode.NOT_PLAN_OWNER);
+					}
+					userMissionRepository.delete(userMission);
+				});
+		}
+	}
+
 	private void saveTags(final Mission mission, final List<String> tagNames) {
 		if (tagNames == null || tagNames.isEmpty()) {
 			return;

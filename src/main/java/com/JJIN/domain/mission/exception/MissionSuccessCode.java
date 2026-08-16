@@ -24,6 +24,7 @@ public enum MissionSuccessCode implements BaseCode {
 	MISSION_CREATE_SUCCESS(HttpStatus.OK, "요청이 성공적으로 수행되었습니다."),
 	PRESIGNED_URL_SUCCESS(HttpStatus.OK, "Presigned URL이 생성되었습니다."),
 	MISSION_ADD_TO_PLAN_SUCCESS(HttpStatus.OK, "찜 설정이 완료되었습니다."),
+	MISSION_REMOVE_FROM_PLAN_SUCCESS(HttpStatus.OK, "찜 설정이 해제되었습니다."),
 	;
 
 	private final HttpStatus httpStatus;

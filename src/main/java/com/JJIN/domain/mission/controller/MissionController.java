@@ -3,6 +3,7 @@ package com.JJIN.domain.mission.controller;
 import java.util.List;
 
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -15,6 +16,7 @@ import com.JJIN.domain.mission.controller.docs.MissionControllerDocs;
 import com.JJIN.domain.mission.dto.request.AddMissionToPlansRequest;
 import com.JJIN.domain.mission.dto.request.CreateMissionRequest;
 import com.JJIN.domain.mission.dto.request.PresignedUrlRequest;
+import com.JJIN.domain.mission.dto.request.RemoveMissionFromPlansRequest;
 import com.JJIN.domain.mission.dto.response.AddMissionToPlansResponse;
 import com.JJIN.domain.mission.dto.response.CreateMissionResponse;
 import com.JJIN.domain.mission.dto.response.HotMissionListResponse;
@@ -107,6 +109,17 @@ public class MissionController implements MissionControllerDocs {
 		AddMissionToPlansResponse response =
 			missionService.addMissionToPlans(currentAuth.memberId(), missionId, request.planIds());
 		return ResponseEntity.ok(SuccessResponse.of(MissionSuccessCode.MISSION_ADD_TO_PLAN_SUCCESS, response));
+	}
+
+	@DeleteMapping("/{missionId}")
+	public ResponseEntity<SuccessResponse<Void>> removeMissionFromPlans(
+		@CurrentMember CurrentAuth currentAuth,
+		@PathVariable Long missionId,
+		@Valid @RequestBody RemoveMissionFromPlansRequest request
+	) {
+		validateAuthenticated(currentAuth);
+		missionService.removeMissionFromPlans(currentAuth.memberId(), missionId, request.planIds());
+		return ResponseEntity.ok(SuccessResponse.of(MissionSuccessCode.MISSION_REMOVE_FROM_PLAN_SUCCESS));
 	}
 
 	@PostMapping("/presigned-url")
