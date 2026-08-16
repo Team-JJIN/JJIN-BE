@@ -4,20 +4,21 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.stereotype.Component;
 
 import com.JJIN.domain.onboarding.entity.enums.TourApiContentType;
+import com.JJIN.global.ai.RunyourAiChatClient;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * 사용자가 입력한 미션 제목/설명/태그를 보고 LLM(Spring AI)으로
+ * 사용자가 입력한 미션 제목/설명/태그를 보고 LLM(runyour.ai)으로
  * TourApiContentType 카테고리 하나를 분류한다.
  */
 @Slf4j
 @Component
+@RequiredArgsConstructor
 public class MissionCategoryClassifier {
 
 	private static final TourApiContentType FALLBACK_CATEGORY = TourApiContentType.TOURIST_ATTRACTION;
@@ -35,11 +36,7 @@ public class MissionCategoryClassifier {
 		- 애매하면 가장 근접한 하나를 고른다.
 		""".formatted(buildCategoryCatalog());
 
-	private final ChatClient chatClient;
-
-	public MissionCategoryClassifier(final ChatClient.Builder chatClientBuilder) {
-		this.chatClient = chatClientBuilder.build();
-	}
+	private final RunyourAiChatClient runyourAiChatClient;
 
 	public TourApiContentType classify(final String title, final String description, final List<String> tags) {
 		String tagText = (tags == null || tags.isEmpty()) ? "(없음)" : String.join(", ", tags);
@@ -51,12 +48,7 @@ public class MissionCategoryClassifier {
 			""".formatted(title, description, tagText);
 
 		try {
-			String answer = chatClient.prompt()
-				.system(SYSTEM_PROMPT)
-				.user(userPrompt)
-				.call()
-				.content();
-
+			String answer = runyourAiChatClient.chat(SYSTEM_PROMPT, userPrompt);
 			return parse(answer);
 		} catch (RuntimeException e) {
 			log.error("미션 카테고리 분류 중 오류 발생. fallback={}", FALLBACK_CATEGORY, e);
