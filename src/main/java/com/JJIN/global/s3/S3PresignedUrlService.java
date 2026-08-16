@@ -5,7 +5,7 @@ import java.time.Duration;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
-import com.JJIN.domain.mission.exception.MissionV2ErrorCode;
+import com.JJIN.domain.mission.exception.MissionErrorCode;
 import com.JJIN.global.exception.JjinException;
 
 import lombok.RequiredArgsConstructor;
@@ -47,7 +47,7 @@ public class S3PresignedUrlService {
 			return presigned.url().toString();
 		} catch (RuntimeException e) {
 			log.error("Presigned URL 생성 실패: key={}", key, e);
-			throw new JjinException(MissionV2ErrorCode.PRESIGNED_URL_GENERATION_FAILED);
+			throw new JjinException(MissionErrorCode.PRESIGNED_URL_GENERATION_FAILED);
 		}
 	}
 }

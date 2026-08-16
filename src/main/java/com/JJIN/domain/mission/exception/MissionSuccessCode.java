@@ -21,6 +21,8 @@ public enum MissionSuccessCode implements BaseCode {
 	MISSION_PROOF_LIKE_TOGGLE_SUCCESS(HttpStatus.OK, "미션 인증 좋아요 상태를 변경했습니다."),
 	MISSION_PROOF_COMMENT_LIST_SUCCESS(HttpStatus.OK, "미션 인증 댓글 목록을 조회했습니다."),
 	MISSION_PROOF_COMMENT_CREATE_SUCCESS(HttpStatus.OK, "미션 인증 댓글을 작성했습니다."),
+	MISSION_CREATE_SUCCESS(HttpStatus.OK, "요청이 성공적으로 수행되었습니다."),
+	PRESIGNED_URL_SUCCESS(HttpStatus.OK, "Presigned URL이 생성되었습니다."),
 	;
 
 	private final HttpStatus httpStatus;

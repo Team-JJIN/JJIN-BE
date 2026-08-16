@@ -40,10 +40,20 @@ import lombok.RequiredArgsConstructor;
 public class MissionService {
 
 	private static final int MAX_PAGE_SIZE = 50;
+	private static final String MISSION_IMAGE_PREFIX = "mission/";
+	private static final Set<String> ALLOWED_IMAGE_CONTENT_TYPES = Set.of(
+		"image/jpeg", "image/jpg", "image/png", "image/gif", "image/webp"
+	);
 
 	private final MissionRepository missionRepository;
 	private final MissionTagMappingRepository missionTagMappingRepository;
 	private final UserMissionRepository userMissionRepository;
+	private final MemberRepository memberRepository;
+	private final MissionTagRepository missionTagRepository;
+	private final MissionCategoryClassifier missionCategoryClassifier;
+	private final S3PresignedUrlService s3PresignedUrlService;
+	private final TravelPlanRepository travelPlanRepository;
+	private final TravelPlanMissionRepository travelPlanMissionRepository;
 
 	@Transactional(readOnly = true)
 	public MissionSearchFeedResponse searchMissions(
@@ -112,6 +122,76 @@ public class MissionService {
 		boolean added = userMissionRepository.existsByMemberIdAndMissionId(memberId, missionId);
 
 		return MissionDetailResponse.of(mission, tags, added);
+	}
+
+	public PresignedUrlResponse createPresignedUrl(final String fileName, final String contentType) {
+		if (!ALLOWED_IMAGE_CONTENT_TYPES.contains(contentType.toLowerCase())) {
+			throw new JjinException(MissionErrorCode.UNSUPPORTED_IMAGE_TYPE);
+		}
+
+		String key = MISSION_IMAGE_PREFIX + UUID.randomUUID() + "_" + fileName;
+		String presignedUrl = s3PresignedUrlService.generatePutPresignedUrl(key, contentType);
+		return PresignedUrlResponse.of(presignedUrl, key);
+	}
+
+	@Transactional
+	public Long createMission(final Long memberId, final CreateMissionRequest request) {
+		TourApiContentType category = missionCategoryClassifier.classify(
+			request.title(), request.description(), request.tags()
+		);
+
+		Member createdBy = memberRepository.getReferenceById(memberId);
+
+		Mission mission = missionRepository.save(
+			Mission.create(
+				request.title(),
+				request.description(),
+				request.difficulty(),
+				category,
+				request.imageUrl(),
+				createdBy,
+				MissionSourceType.USER_CREATED
+			)
+		);
+
+		saveTags(mission, request.tags());
+		return mission.getId();
+	}
+
+
+	@Transactional
+	public AddMissionToPlansResponse addMissionToPlans(
+		final Long memberId,
+		final Long missionId,
+		final List<Long> planIds
+	) {
+		Mission mission = missionRepository.findById(missionId)
+			.orElseThrow(() -> new JjinException(MissionErrorCode.MISSION_NOT_FOUND));
+
+		List<AddMissionToPlansResponse.LikeItem> likes = new ArrayList<>();
+		for (Long planId : planIds) {
+			TravelPlan plan = travelPlanRepository.findById(planId)
+				.orElseThrow(() -> new JjinException(MissionErrorCode.TRAVEL_PLAN_NOT_FOUND));
+			if (!plan.getMember().getId().equals(memberId)) {
+				throw new JjinException(MissionErrorCode.NOT_PLAN_OWNER);
+			}
+			TravelPlanMission link = travelPlanMissionRepository
+				.findByTravelPlanIdAndMissionId(planId, missionId)
+				.orElseGet(() -> travelPlanMissionRepository.save(TravelPlanMission.create(plan, mission)));
+			likes.add(new AddMissionToPlansResponse.LikeItem(link.getId(), planId));
+		}
+		return AddMissionToPlansResponse.of(likes);
+	}
+
+	private void saveTags(final Mission mission, final List<String> tagNames) {
+		if (tagNames == null || tagNames.isEmpty()) {
+			return;
+		}
+		for (String tagName : tagNames) {
+			MissionTag tag = missionTagRepository.findByName(tagName)
+				.orElseGet(() -> missionTagRepository.save(MissionTag.of(tagName)));
+			missionTagMappingRepository.save(MissionTagMapping.of(mission, tag));
+		}
 	}
 
 	private Map<Long, List<String>> getTagsByMissionId(final List<Long> missionIds) {

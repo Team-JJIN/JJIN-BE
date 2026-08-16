@@ -9,7 +9,7 @@ import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
 
-import com.JJIN.domain.mission.exception.MissionV2ErrorCode;
+import com.JJIN.domain.mission.exception.MissionErrorCode;
 import com.JJIN.global.ai.dto.ChatCompletionRequest;
 import com.JJIN.global.ai.dto.ChatCompletionResponse;
 import com.JJIN.global.ai.dto.ChatMessage;
@@ -50,7 +50,7 @@ public class RunyourAiChatClient {
 			.retrieve()
 			.onStatus(HttpStatusCode::isError, (req, res) -> {
 				log.error("runyour.ai 호출 실패: status={}", res.getStatusCode());
-				throw new JjinException(MissionV2ErrorCode.CATEGORY_CLASSIFICATION_FAILED);
+				throw new JjinException(MissionErrorCode.CATEGORY_CLASSIFICATION_FAILED);
 			})
 			.body(ChatCompletionResponse.class);
 

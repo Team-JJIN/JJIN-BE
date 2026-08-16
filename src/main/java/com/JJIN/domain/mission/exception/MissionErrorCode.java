@@ -24,6 +24,11 @@ public enum MissionErrorCode implements BaseCode {
 	 */
 	MISSION_NOT_FOUND(HttpStatus.NOT_FOUND, "미션을 찾을 수 없습니다."),
 	MISSION_PROOF_NOT_FOUND(HttpStatus.NOT_FOUND, "미션 인증글을 찾을 수 없습니다."),
+	/*
+	500 INTERNAL SERVER ERROR
+	 */
+	PRESIGNED_URL_GENERATION_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "Presigned URL 생성에 실패했습니다."),
+	CATEGORY_CLASSIFICATION_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "미션 카테고리 분류에 실패했습니다."),
 	;
 
 	private final HttpStatus httpStatus;
