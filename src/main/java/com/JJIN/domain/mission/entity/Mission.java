@@ -50,10 +50,6 @@ public class Mission extends BaseTimeEntity {
 	@Column(name = "category", length = 30)
 	private TourApiContentType category;
 
-	// TODO: region 추후 enum 화 논의 필요
-	@Column(length = 100)
-	private String region;
-
 	@Column(name = "image_url", length = 2048)
 	private String imageUrl;
 
@@ -70,33 +66,24 @@ public class Mission extends BaseTimeEntity {
 	@Column(nullable = false, length = 20)
 	private MissionStatus status = MissionStatus.ACTIVE;
 
-	// TODO: 인기 미션 기준이 확정되면 MissionStats 같은 별도 집계 모델로 분리한다.
-	@Builder.Default
-	@Column(name = "is_recommended", nullable = false)
-	private boolean recommended = false;
-
 	public static Mission create(
 		final String title,
 		final String description,
 		final MissionDifficulty difficulty,
 		final TourApiContentType category,
-		final String region,
 		final String imageUrl,
 		final Member createdBy,
-		final MissionSourceType sourceType,
-		final boolean recommended
+		final MissionSourceType sourceType
 	) {
 		return Mission.builder()
 			.title(title)
 			.description(description)
 			.difficulty(difficulty)
 			.category(category)
-			.region(region)
 			.imageUrl(imageUrl)
 			.createdBy(createdBy)
 			.sourceType(sourceType)
 			.status(MissionStatus.ACTIVE)
-			.recommended(recommended)
 			.build();
 	}
 }
