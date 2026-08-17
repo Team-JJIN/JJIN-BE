@@ -21,6 +21,7 @@ import com.JJIN.domain.mission.dto.response.AddMissionToPlansResponse;
 import com.JJIN.domain.mission.dto.response.CreateMissionResponse;
 import com.JJIN.domain.mission.dto.response.HotMissionListResponse;
 import com.JJIN.domain.mission.dto.response.MissionDetailResponse;
+import com.JJIN.domain.mission.dto.response.MissionLikeStatusResponse;
 import com.JJIN.domain.mission.dto.response.MissionSearchFeedResponse;
 import com.JJIN.domain.mission.dto.response.PresignedUrlResponse;
 import com.JJIN.domain.mission.entity.enums.MissionDifficulty;
@@ -97,6 +98,16 @@ public class MissionController implements MissionControllerDocs {
 		return ResponseEntity.ok(
 			SuccessResponse.of(MissionSuccessCode.MISSION_CREATE_SUCCESS, CreateMissionResponse.of(missionId))
 		);
+	}
+
+	@GetMapping("/likes/{missionId}")
+	public ResponseEntity<SuccessResponse<MissionLikeStatusResponse>> getMissionLikeStatus(
+		@CurrentMember CurrentAuth currentAuth,
+		@PathVariable Long missionId
+	) {
+		validateAuthenticated(currentAuth);
+		MissionLikeStatusResponse response = missionService.getMissionLikeStatus(currentAuth.memberId(), missionId);
+		return ResponseEntity.ok(SuccessResponse.of(MissionSuccessCode.MISSION_LIKE_STATUS_SUCCESS, response));
 	}
 
 	@PostMapping("/{missionId}")

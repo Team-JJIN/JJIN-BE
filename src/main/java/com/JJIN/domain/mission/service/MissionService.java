@@ -26,6 +26,7 @@ import com.JJIN.domain.mission.dto.request.CreateMissionRequest;
 import com.JJIN.domain.mission.dto.response.AddMissionToPlansResponse;
 import com.JJIN.domain.mission.dto.response.MissionCardResponse;
 import com.JJIN.domain.mission.dto.response.MissionDetailResponse;
+import com.JJIN.domain.mission.dto.response.MissionLikeStatusResponse;
 import com.JJIN.domain.mission.dto.response.MissionSearchFeedResponse;
 import com.JJIN.domain.mission.dto.response.PresignedUrlResponse;
 import com.JJIN.domain.mission.entity.Mission;
@@ -211,6 +212,32 @@ public class MissionService {
 					userMissionRepository.delete(userMission);
 				});
 		}
+	}
+
+	@Transactional(readOnly = true)
+	public MissionLikeStatusResponse getMissionLikeStatus(final Long memberId, final Long missionId) {
+		List<TravelPlan> plans = travelPlanRepository.findByMemberIdOrderByCreatedAtDesc(memberId);
+
+		Map<Long, UserMission> likedByPlanId = userMissionRepository
+			.findAllByMemberIdAndMissionId(memberId, missionId)
+			.stream()
+			.collect(Collectors.toMap(um -> um.getTravelPlan().getId(), um -> um));
+
+		List<MissionLikeStatusResponse.PlanLikeItem> items = plans.stream()
+			.map(plan -> {
+				UserMission um = likedByPlanId.get(plan.getId());
+				return new MissionLikeStatusResponse.PlanLikeItem(
+					plan.getId(),
+					plan.getName(),
+					plan.getStartDate(),
+					plan.getEndDate(),
+					um != null,
+					um != null ? um.getId() : null
+				);
+			})
+			.toList();
+
+		return MissionLikeStatusResponse.of(items);
 	}
 
 	private void saveTags(final Mission mission, final List<String> tagNames) {

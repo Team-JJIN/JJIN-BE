@@ -17,6 +17,8 @@ public interface UserMissionRepository extends JpaRepository<UserMission, Long> 
 
 	Optional<UserMission> findByTravelPlanIdAndMissionId(Long travelPlanId, Long missionId);
 
+	List<UserMission> findAllByMemberIdAndMissionId(Long memberId, Long missionId);
+
 	@Query("""
 		select um.mission.id
 		from UserMission um
