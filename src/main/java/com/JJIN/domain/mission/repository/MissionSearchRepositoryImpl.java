@@ -103,6 +103,9 @@ public class MissionSearchRepositoryImpl implements MissionSearchRepository {
 		if (!condition.difficulties().isEmpty()) {
 			jpql.append(" and m.difficulty in :difficulties ");
 		}
+		if (condition.sourceType() != null) {
+			jpql.append(" and m.sourceType = :sourceType ");
+		}
 	}
 
 	private void appendOrder(
@@ -134,6 +137,9 @@ public class MissionSearchRepositoryImpl implements MissionSearchRepository {
 		}
 		if (!condition.difficulties().isEmpty()) {
 			query.setParameter("difficulties", condition.difficulties());
+		}
+		if (condition.sourceType() != null) {
+			query.setParameter("sourceType", condition.sourceType());
 		}
 	}
 }

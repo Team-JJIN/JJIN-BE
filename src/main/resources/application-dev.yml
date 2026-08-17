@@ -72,6 +72,19 @@ auth:
     code-ttl-seconds: 300
     verified-ttl-seconds: 1800
 
+aws:
+  region: ${AWS_REGION}
+  s3:
+    bucket: ${AWS_S3_BUCKET}
+  credentials:
+    access-key: ${AWS_ACCESS_KEY}
+    secret-key: ${AWS_SECRET_KEY}
+
+runyour:
+  base-url: ${RUNYOUR_AI_BASE_URL}
+  api-key: ${RUNYOUR_AI_API_KEY}
+  model: ${RUNYOUR_AI_MODEL}
+
 springdoc:
   swagger-ui:
     path: /swagger-ui.html

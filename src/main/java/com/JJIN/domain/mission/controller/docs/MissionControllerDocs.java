@@ -8,6 +8,7 @@ import com.JJIN.domain.mission.dto.response.HotMissionListResponse;
 import com.JJIN.domain.mission.dto.response.MissionDetailResponse;
 import com.JJIN.domain.mission.dto.response.MissionSearchFeedResponse;
 import com.JJIN.domain.mission.entity.enums.MissionDifficulty;
+import com.JJIN.domain.mission.entity.enums.MissionSourceTypeOption;
 import com.JJIN.domain.onboarding.entity.enums.TourApiContentType;
 import com.JJIN.global.auth.dto.CurrentAuth;
 import com.JJIN.global.response.dto.SuccessResponse;
@@ -92,7 +93,9 @@ public interface MissionControllerDocs {
 		List<MissionDifficulty> difficulties,
 		@Parameter(description = "정렬값: popular/latest", example = "popular") String sort,
 		@Parameter(description = "페이지 번호. 0부터 시작", example = "0") int page,
-		@Parameter(description = "페이지 크기. 1~50", example = "20") int size
+		@Parameter(description = "페이지 크기. 1~50", example = "20") int size,
+		@Parameter(description = "소스 필터: ALL(전체), OFFICIAL(공식), HOT(핫한 미션), ADDED(내가 추가한 미션). 기본값 ALL", example = "ALL")
+		MissionSourceTypeOption source
 	);
 
 	@Operation(

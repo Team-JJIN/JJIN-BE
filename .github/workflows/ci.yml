@@ -11,30 +11,6 @@ jobs:
   build-and-test:
     runs-on: ubuntu-latest
 
-    # @SpringBootTest가 실제 DB 연결을 필요로 하므로, 러너 옆에 MySQL 서비스 컨테이너를 띄움
-    services:
-      mysql:
-        image: mysql:8.0
-        env:
-          MYSQL_ROOT_PASSWORD: root
-          MYSQL_DATABASE: jjin
-        ports:
-          - 3306:3306
-        options: >-
-          --health-cmd="mysqladmin ping -h localhost -u root -proot"
-          --health-interval=10s
-          --health-timeout=5s
-          --health-retries=5
-
-    # CI 전용 더미 값 — 운영 비밀값과 무관하며, 컨텍스트 로딩 테스트 통과용
-    env:
-      DB_HOST: 127.0.0.1
-      DB_PORT: 3306
-      DB_NAME: jjin
-      DB_USERNAME: root
-      DB_PASSWORD: root
-      JWT_SECRET: ci-only-dummy-jwt-secret-0123456789abcdef0123456789abcdef
-
     steps:
       - name: Checkout
         uses: actions/checkout@v4
