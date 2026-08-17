@@ -29,6 +29,7 @@ import com.JJIN.domain.mission.dto.response.MissionDetailResponse;
 import com.JJIN.domain.mission.dto.response.MissionLikeStatusResponse;
 import com.JJIN.domain.mission.dto.response.MissionSearchFeedResponse;
 import com.JJIN.domain.mission.dto.response.PresignedUrlResponse;
+import com.JJIN.domain.mission.entity.HotMissionItem;
 import com.JJIN.domain.mission.entity.Mission;
 import com.JJIN.domain.mission.entity.MissionTag;
 import com.JJIN.domain.mission.entity.MissionTagMapping;
@@ -36,8 +37,10 @@ import com.JJIN.domain.mission.entity.UserMission;
 import com.JJIN.domain.mission.entity.enums.MissionDifficulty;
 import com.JJIN.domain.mission.entity.enums.MissionSortOption;
 import com.JJIN.domain.mission.entity.enums.MissionSourceType;
+import com.JJIN.domain.mission.entity.enums.MissionSourceTypeOption;
 import com.JJIN.domain.mission.entity.enums.MissionStatus;
 import com.JJIN.domain.mission.exception.MissionErrorCode;
+import com.JJIN.domain.mission.repository.HotMissionSnapshotRepository;
 import com.JJIN.domain.mission.repository.MissionRepository;
 import com.JJIN.domain.mission.repository.MissionTagMappingRepository;
 import com.JJIN.domain.mission.repository.MissionTagRepository;
@@ -68,6 +71,7 @@ public class MissionService {
 	private final MissionCategoryClassifier missionCategoryClassifier;
 	private final S3PresignedUrlService s3PresignedUrlService;
 	private final TravelPlanRepository travelPlanRepository;
+	private final HotMissionSnapshotRepository hotMissionSnapshotRepository;
 
 	@Transactional(readOnly = true)
 	public MissionSearchFeedResponse searchMissions(
@@ -77,17 +81,29 @@ public class MissionService {
 		final List<MissionDifficulty> difficulties,
 		final String sort,
 		final int page,
-		final int size
+		final int size,
+		final MissionSourceTypeOption source
 	) {
+		if (source == MissionSourceTypeOption.HOT) {
+			return buildHotMissionsResponse(memberId);
+		}
+		if (source == MissionSourceTypeOption.ADDED) {
+			return buildAddedMissionsResponse(memberId);
+		}
+
 		validatePageRequest(page, size);
 		MissionSortOption sortOption = parseSortOption(sort);
 		PageRequest pageRequest = PageRequest.of(page, size);
+
+		MissionSourceType sourceType = source == MissionSourceTypeOption.OFFICIAL
+			? MissionSourceType.OFFICIAL : null;
 
 		MissionSearchCondition condition = new MissionSearchCondition(
 			normalizeKeyword(keyword),
 			normalizeCategories(categories),
 			normalizeDifficulties(difficulties),
-			sortOption
+			sortOption,
+			sourceType
 		);
 
 		Page<MissionSearchResult> searchResults = missionRepository.search(condition, pageRequest);
@@ -249,6 +265,56 @@ public class MissionService {
 				.orElseGet(() -> missionTagRepository.save(MissionTag.of(tagName)));
 			missionTagMappingRepository.save(MissionTagMapping.of(mission, tag));
 		}
+	}
+
+	private MissionSearchFeedResponse buildHotMissionsResponse(final Long memberId) {
+		List<HotMissionItem> items = hotMissionSnapshotRepository
+			.findTopByOrderByComputedAtDesc()
+			.map(snapshot -> hotMissionSnapshotRepository.findItemsWithMission(snapshot))
+			.orElse(List.of());
+
+		if (items.isEmpty()) {
+			return new MissionSearchFeedResponse(List.of(), 0, 0, 0, false);
+		}
+
+		List<Long> missionIds = items.stream().map(i -> i.getMission().getId()).toList();
+		Map<Long, List<String>> tagsByMissionId = getTagsByMissionId(missionIds);
+		Set<Long> addedMissionIds = userMissionRepository.findMissionIdsByMemberIdAndMissionIdIn(memberId, missionIds);
+
+		List<MissionCardResponse> cards = items.stream()
+			.map(item -> MissionCardResponse.of(
+				item.getMission(),
+				tagsByMissionId.getOrDefault(item.getMission().getId(), List.of()),
+				item.getAddedCount(),
+				addedMissionIds.contains(item.getMission().getId())
+			))
+			.toList();
+
+		return new MissionSearchFeedResponse(cards, cards.size(), 0, cards.size(), false);
+	}
+
+	private MissionSearchFeedResponse buildAddedMissionsResponse(final Long memberId) {
+		List<Long> missionIds = userMissionRepository.findDistinctMissionIdsByMemberId(memberId);
+
+		if (missionIds.isEmpty()) {
+			return new MissionSearchFeedResponse(List.of(), 0, 0, 0, false);
+		}
+
+		Map<Long, Mission> missionById = missionRepository.findAllByIdIn(missionIds).stream()
+			.filter(m -> m.getStatus() == MissionStatus.ACTIVE)
+			.collect(Collectors.toMap(Mission::getId, Function.identity()));
+		Map<Long, List<String>> tagsByMissionId = getTagsByMissionId(new ArrayList<>(missionById.keySet()));
+
+		List<MissionCardResponse> cards = missionById.values().stream()
+			.map(mission -> MissionCardResponse.of(
+				mission,
+				tagsByMissionId.getOrDefault(mission.getId(), List.of()),
+				0L,
+				true
+			))
+			.toList();
+
+		return new MissionSearchFeedResponse(cards, cards.size(), 0, cards.size(), false);
 	}
 
 	private Map<Long, List<String>> getTagsByMissionId(final List<Long> missionIds) {

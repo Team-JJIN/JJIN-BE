@@ -25,6 +25,7 @@ import com.JJIN.domain.mission.dto.response.MissionLikeStatusResponse;
 import com.JJIN.domain.mission.dto.response.MissionSearchFeedResponse;
 import com.JJIN.domain.mission.dto.response.PresignedUrlResponse;
 import com.JJIN.domain.mission.entity.enums.MissionDifficulty;
+import com.JJIN.domain.mission.entity.enums.MissionSourceTypeOption;
 import com.JJIN.domain.mission.exception.MissionSuccessCode;
 import com.JJIN.domain.mission.service.HotMissionService;
 import com.JJIN.domain.mission.service.MissionService;
@@ -55,7 +56,8 @@ public class MissionController implements MissionControllerDocs {
 		@RequestParam(required = false) List<MissionDifficulty> difficulties,
 		@RequestParam(defaultValue = "popular") String sort,
 		@RequestParam(defaultValue = "0") int page,
-		@RequestParam(defaultValue = "20") int size
+		@RequestParam(defaultValue = "20") int size,
+		@RequestParam(defaultValue = "ALL") MissionSourceTypeOption source
 	) {
 		validateAuthenticated(currentAuth);
 		MissionSearchFeedResponse response = missionService.searchMissions(
@@ -65,7 +67,8 @@ public class MissionController implements MissionControllerDocs {
 			difficulties,
 			sort,
 			page,
-			size
+			size,
+			source
 		);
 		return ResponseEntity.ok(SuccessResponse.of(MissionSuccessCode.MISSION_SEARCH_SUCCESS, response));
 	}

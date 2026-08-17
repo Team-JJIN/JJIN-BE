@@ -4,13 +4,15 @@ import java.util.List;
 
 import com.JJIN.domain.mission.entity.enums.MissionDifficulty;
 import com.JJIN.domain.mission.entity.enums.MissionSortOption;
+import com.JJIN.domain.mission.entity.enums.MissionSourceType;
 import com.JJIN.domain.onboarding.entity.enums.TourApiContentType;
 
 public record MissionSearchCondition(
 	String keyword,
 	List<TourApiContentType> categories,
 	List<MissionDifficulty> difficulties,
-	MissionSortOption sortOption
+	MissionSortOption sortOption,
+	MissionSourceType sourceType
 ) {
 
 	public MissionSearchCondition {

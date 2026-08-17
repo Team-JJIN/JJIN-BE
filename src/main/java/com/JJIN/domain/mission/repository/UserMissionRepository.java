@@ -19,6 +19,9 @@ public interface UserMissionRepository extends JpaRepository<UserMission, Long> 
 
 	List<UserMission> findAllByMemberIdAndMissionId(Long memberId, Long missionId);
 
+	@Query("select distinct um.mission.id from UserMission um where um.member.id = :memberId")
+	List<Long> findDistinctMissionIdsByMemberId(@Param("memberId") Long memberId);
+
 	@Query("""
 		select um.mission.id
 		from UserMission um
