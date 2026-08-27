@@ -233,6 +233,9 @@ public class MissionService {
 
 	@Transactional(readOnly = true)
 	public MissionLikeStatusResponse getMissionLikeStatus(final Long memberId, final Long missionId) {
+		missionRepository.findByIdAndStatus(missionId, MissionStatus.ACTIVE)
+			.orElseThrow(() -> new JjinException(MissionErrorCode.MISSION_NOT_FOUND));
+
 		List<TravelPlan> plans = travelPlanRepository.findByMemberIdOrderByCreatedAtDesc(memberId);
 
 		Map<Long, UserMission> likedByPlanId = userMissionRepository
@@ -271,7 +274,7 @@ public class MissionService {
 	private MissionSearchFeedResponse buildHotMissionsResponse(final Long memberId) {
 		List<HotMissionItem> items = hotMissionSnapshotRepository
 			.findTopByOrderByComputedAtDesc()
-			.map(snapshot -> hotMissionSnapshotRepository.findItemsWithMission(snapshot))
+			.map(hotMissionSnapshotRepository::findItemsWithMission)
 			.orElse(List.of());
 
 		if (items.isEmpty()) {
