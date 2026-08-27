@@ -88,7 +88,8 @@ public class MissionService {
 			return buildHotMissionsResponse(memberId);
 		}
 		if (source == MissionSourceTypeOption.ADDED) {
-			return buildAddedMissionsResponse(memberId);
+			validatePageRequest(page, size);
+			return buildAddedMissionsResponse(memberId, page, size);
 		}
 
 		validatePageRequest(page, size);
@@ -293,28 +294,35 @@ public class MissionService {
 		return new MissionSearchFeedResponse(cards, cards.size(), 0, cards.size(), false);
 	}
 
-	private MissionSearchFeedResponse buildAddedMissionsResponse(final Long memberId) {
-		List<Long> missionIds = userMissionRepository.findDistinctMissionIdsByMemberId(memberId);
+	private MissionSearchFeedResponse buildAddedMissionsResponse(
+		final Long memberId,
+		final int page,
+		final int size
+	) {
+		PageRequest pageRequest = PageRequest.of(page, size);
+		Page<Long> missionIdPage = userMissionRepository.findDistinctMissionIdsByMemberId(memberId, pageRequest);
 
-		if (missionIds.isEmpty()) {
-			return new MissionSearchFeedResponse(List.of(), 0, 0, 0, false);
+		if (missionIdPage.isEmpty()) {
+			return new MissionSearchFeedResponse(List.of(), missionIdPage.getTotalElements(), page, size, false);
 		}
 
+		List<Long> missionIds = missionIdPage.getContent();
 		Map<Long, Mission> missionById = missionRepository.findAllByIdIn(missionIds).stream()
 			.filter(m -> m.getStatus() == MissionStatus.ACTIVE)
 			.collect(Collectors.toMap(Mission::getId, Function.identity()));
 		Map<Long, List<String>> tagsByMissionId = getTagsByMissionId(new ArrayList<>(missionById.keySet()));
 
-		List<MissionCardResponse> cards = missionById.values().stream()
-			.map(mission -> MissionCardResponse.of(
-				mission,
-				tagsByMissionId.getOrDefault(mission.getId(), List.of()),
+		List<MissionCardResponse> cards = missionIds.stream()
+			.filter(missionById::containsKey)
+			.map(missionId -> MissionCardResponse.of(
+				missionById.get(missionId),
+				tagsByMissionId.getOrDefault(missionId, List.of()),
 				0L,
 				true
 			))
 			.toList();
 
-		return new MissionSearchFeedResponse(cards, cards.size(), 0, cards.size(), false);
+		return new MissionSearchFeedResponse(cards, missionIdPage.getTotalElements(), page, size, missionIdPage.hasNext());
 	}
 
 	private Map<Long, List<String>> getTagsByMissionId(final List<Long> missionIds) {
