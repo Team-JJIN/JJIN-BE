@@ -48,6 +48,9 @@ public class TravelPlan extends BaseTimeEntity {
 	@JoinColumn(name = "member_id", nullable = false)
 	private Member member;
 
+	@Column(name = "name", nullable = false)
+	private String name;
+
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "region_id")
 	private TravelRegion region;
@@ -86,6 +89,7 @@ public class TravelPlan extends BaseTimeEntity {
 	@Builder(access = AccessLevel.PRIVATE)
 	private TravelPlan(
 		final Member member,
+		final String name,
 		final TravelRegion region,
 		final boolean regionUndecided,
 		final LocalDate startDate,
@@ -96,6 +100,7 @@ public class TravelPlan extends BaseTimeEntity {
 		final ExperienceLevel experienceLevel
 	) {
 		this.member = member;
+		this.name = name;
 		this.region = region;
 		this.regionUndecided = regionUndecided;
 		this.startDate = startDate;
@@ -108,6 +113,7 @@ public class TravelPlan extends BaseTimeEntity {
 
 	public static TravelPlan create(
 		final Member member,
+		final String name,
 		final TravelRegion region,
 		final boolean regionUndecided,
 		final LocalDate startDate,
@@ -119,6 +125,7 @@ public class TravelPlan extends BaseTimeEntity {
 	) {
 		return TravelPlan.builder()
 			.member(member)
+			.name(name)
 			.region(region)
 			.regionUndecided(regionUndecided)
 			.startDate(startDate)

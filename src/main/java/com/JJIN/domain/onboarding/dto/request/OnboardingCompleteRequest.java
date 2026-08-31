@@ -11,11 +11,17 @@ import com.JJIN.domain.onboarding.entity.enums.TransportMode;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 
 @Schema(description = "온보딩 여행 기본 정보 저장 요청")
 public record OnboardingCompleteRequest(
+
+	@Schema(description = "여행 이름", example = "서울 여행")
+	@NotNull(message = "여행 이름은 필수입니다.")
+	@NotBlank(message = "여행 이름은 비울 수 없습니다.")
+	String name,
 
 	@Schema(
 		description = "여행 지역 ID. regionUndecided가 true면 반드시 null이어야 한다.",

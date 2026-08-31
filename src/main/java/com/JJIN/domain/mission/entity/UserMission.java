@@ -2,6 +2,7 @@ package com.JJIN.domain.mission.entity;
 
 import com.JJIN.domain.member.entity.Member;
 import com.JJIN.domain.mission.entity.enums.UserMissionStatus;
+import com.JJIN.domain.onboarding.entity.TravelPlan;
 
 import java.time.LocalDateTime;
 
@@ -30,13 +31,14 @@ import lombok.NoArgsConstructor;
 	name = "user_mission",
 	uniqueConstraints = {
 		@UniqueConstraint(
-			name = "uk_user_mission_member_mission",
-			columnNames = {"member_id", "mission_id"}
+			name = "uk_user_mission_plan_mission",
+			columnNames = {"travel_plan_id", "mission_id"}
 		)
 	},
 	indexes = {
 		@Index(name = "idx_user_mission_member_id", columnList = "member_id"),
-		@Index(name = "idx_user_mission_mission_id", columnList = "mission_id")
+		@Index(name = "idx_user_mission_mission_id", columnList = "mission_id"),
+		@Index(name = "idx_user_mission_travel_plan_id", columnList = "travel_plan_id")
 	}
 )
 @Getter
@@ -57,6 +59,10 @@ public class UserMission {
 	@JoinColumn(name = "mission_id", nullable = false)
 	private Mission mission;
 
+	@ManyToOne(fetch = FetchType.LAZY)
+	@JoinColumn(name = "travel_plan_id", nullable = false)
+	private TravelPlan travelPlan;
+
 	@Builder.Default
 	@Enumerated(EnumType.STRING)
 	@Column(nullable = false, length = 20)
@@ -70,11 +76,13 @@ public class UserMission {
 
 	public static UserMission add(
 		final Member member,
-		final Mission mission
+		final Mission mission,
+		final TravelPlan travelPlan
 	) {
 		return UserMission.builder()
 			.member(member)
 			.mission(mission)
+			.travelPlan(travelPlan)
 			.status(UserMissionStatus.ADDED)
 			.build();
 	}

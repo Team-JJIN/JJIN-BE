@@ -50,10 +50,6 @@ public class Mission extends BaseTimeEntity {
 	@Column(name = "category", length = 30)
 	private TourApiContentType category;
 
-	// TODO: region 추후 enum 화 논의 필요
-	@Column(length = 100)
-	private String region;
-
 	@Column(name = "image_url", length = 2048)
 	private String imageUrl;
 
@@ -75,7 +71,6 @@ public class Mission extends BaseTimeEntity {
 		final String description,
 		final MissionDifficulty difficulty,
 		final TourApiContentType category,
-		final String region,
 		final String imageUrl,
 		final Member createdBy,
 		final MissionSourceType sourceType
@@ -85,7 +80,6 @@ public class Mission extends BaseTimeEntity {
 			.description(description)
 			.difficulty(difficulty)
 			.category(category)
-			.region(region)
 			.imageUrl(imageUrl)
 			.createdBy(createdBy)
 			.sourceType(sourceType)

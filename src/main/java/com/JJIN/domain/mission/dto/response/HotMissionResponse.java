@@ -25,9 +25,6 @@ public record HotMissionResponse(
 	@Schema(description = "관광 타입 카테고리", example = "TOURIST_ATTRACTION", nullable = true)
 	TourApiContentType category,
 
-	@Schema(description = "지역", example = "제주", nullable = true)
-	String region,
-
 	@Schema(description = "대표 이미지 URL", nullable = true)
 	String imageUrl,
 
@@ -43,7 +40,6 @@ public record HotMissionResponse(
 			mission.getDescription(),
 			mission.getDifficulty(),
 			mission.getCategory(),
-			mission.getRegion(),
 			mission.getImageUrl(),
 			item.getAddedCount()
 		);

@@ -49,6 +49,10 @@ dependencies {
 	// Redis
 	implementation 'org.springframework.boot:spring-boot-starter-data-redis'
 
+	// AWS S3 (presigned URL)
+	implementation platform('software.amazon.awssdk:bom:2.29.0')
+	implementation 'software.amazon.awssdk:s3'
+
 	// Test
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
 	testImplementation 'org.springframework.security:spring-security-test'

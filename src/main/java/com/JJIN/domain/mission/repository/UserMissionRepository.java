@@ -3,8 +3,11 @@ package com.JJIN.domain.mission.repository;
 import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -13,6 +16,17 @@ import com.JJIN.domain.mission.entity.UserMission;
 import com.JJIN.domain.mission.repository.dto.MissionMetricProjection;
 
 public interface UserMissionRepository extends JpaRepository<UserMission, Long> {
+
+	Optional<UserMission> findByTravelPlanIdAndMissionId(Long travelPlanId, Long missionId);
+
+	List<UserMission> findAllByMemberIdAndMissionId(Long memberId, Long missionId);
+
+	@Query("select distinct um.mission.id from UserMission um where um.member.id = :memberId")
+	List<Long> findDistinctMissionIdsByMemberId(@Param("memberId") Long memberId);
+
+	@Query(value = "select distinct um.mission.id from UserMission um where um.member.id = :memberId",
+		countQuery = "select count(distinct um.mission.id) from UserMission um where um.member.id = :memberId")
+	Page<Long> findDistinctMissionIdsByMemberId(@Param("memberId") Long memberId, Pageable pageable);
 
 	@Query("""
 		select um.mission.id
