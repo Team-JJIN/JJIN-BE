@@ -14,7 +14,7 @@ public enum OnboardingSuccessCode implements BaseCode {
 	/*
 	201 CREATED
 	 */
-	ONBOARDING_COMPLETE_SUCCESS(HttpStatus.CREATED, "첫 여행 일정을 생성했습니다."),
+	ONBOARDING_COMPLETE_SUCCESS(HttpStatus.CREATED, "여행 일정을 생성했습니다."),
 
 	/*
 	200 OK

@@ -34,6 +34,7 @@ public class OnboardingController implements OnboardingControllerDocs {
 	private final OnboardingService onboardingService;
 
 	@Override
+	@Deprecated
 	@PostMapping
 	public ResponseEntity<SuccessResponse<OnboardingCompleteResponse>> completeOnboarding(
 		@CurrentMember CurrentAuth currentAuth,
