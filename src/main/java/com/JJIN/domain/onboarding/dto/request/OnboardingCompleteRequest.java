@@ -8,6 +8,7 @@ import org.springframework.format.annotation.DateTimeFormat;
 
 import com.JJIN.domain.onboarding.entity.enums.ExperienceLevel;
 import com.JJIN.domain.onboarding.entity.enums.TransportMode;
+import com.JJIN.domain.travelplan.dto.internal.CreateTravelPlanCommand;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.Valid;
@@ -77,5 +78,25 @@ public record OnboardingCompleteRequest(
 
 	public boolean isRegionUndecided() {
 		return Boolean.TRUE.equals(regionUndecided);
+	}
+
+	public CreateTravelPlanCommand toCommand() {
+		return new CreateTravelPlanCommand(
+			name,
+			regionId,
+			regionUndecided,
+			startDate,
+			endDate,
+			activityStartTime,
+			activityEndTime,
+			transportMode,
+			preferences == null ? null : preferences.stream()
+				.map(preference -> new CreateTravelPlanCommand.Preference(
+					preference.contentType(),
+					preference.subcategories()
+				))
+				.toList(),
+			experienceLevel
+		);
 	}
 }
