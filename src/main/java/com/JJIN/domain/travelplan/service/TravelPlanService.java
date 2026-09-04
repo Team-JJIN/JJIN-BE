@@ -12,6 +12,7 @@ import com.JJIN.domain.onboarding.entity.enums.TravelSubcategory;
 import com.JJIN.domain.onboarding.repository.TravelPlanRepository;
 import com.JJIN.domain.onboarding.repository.TravelRegionRepository;
 import com.JJIN.domain.travelplan.dto.internal.CreateTravelPlanCommand;
+import com.JJIN.domain.travelplan.dto.response.TravelPlanListResponse;
 import com.JJIN.domain.travelplan.exception.TravelPlanErrorCode;
 import com.JJIN.domain.travelplan.validator.TravelPlanRequestValidator;
 import com.JJIN.global.exception.JjinException;
@@ -58,6 +59,13 @@ public class TravelPlanService {
 		TravelPlan savedTravelPlan = travelPlanRepository.save(travelPlan);
 		log.info("여행 일정 생성 완료: memberId={}, travelPlanId={}", memberId, savedTravelPlan.getId());
 		return savedTravelPlan.getId();
+	}
+
+	@Transactional(readOnly = true)
+	public TravelPlanListResponse getTravelPlans(final Long memberId) {
+		return TravelPlanListResponse.from(
+			travelPlanRepository.findByMemberIdOrderByCreatedAtDesc(memberId)
+		);
 	}
 
 	private TravelRegion resolveRegion(final CreateTravelPlanCommand command) {

@@ -11,6 +11,7 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public enum TravelPlanSuccessCode implements BaseCode {
 
+	TRAVEL_PLAN_LIST_SUCCESS(HttpStatus.OK, "여행 일정 목록을 조회했습니다."),
 	TRAVEL_PLAN_CREATE_SUCCESS(HttpStatus.CREATED, "여행 일정을 생성했습니다."),
 	;
 

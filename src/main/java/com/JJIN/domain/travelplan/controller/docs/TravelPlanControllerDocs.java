@@ -4,6 +4,7 @@ import org.springframework.http.ResponseEntity;
 
 import com.JJIN.domain.travelplan.dto.request.CreateTravelPlanRequest;
 import com.JJIN.domain.travelplan.dto.response.CreateTravelPlanResponse;
+import com.JJIN.domain.travelplan.dto.response.TravelPlanListResponse;
 import com.JJIN.global.auth.dto.CurrentAuth;
 import com.JJIN.global.response.dto.SuccessResponse;
 
@@ -17,6 +18,50 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 
 @Tag(name = "Travel Plan", description = "여행 일정 API")
 public interface TravelPlanControllerDocs {
+
+	@Operation(
+		summary = "여행 일정 목록 조회",
+		description = "로그인한 회원의 여행 일정을 최신 생성순으로 조회한다.",
+		security = @SecurityRequirement(name = "BearerAuth")
+	)
+	@ApiResponses({
+		@ApiResponse(
+			responseCode = "200",
+			description = "여행 일정 목록 조회 성공",
+			content = @Content(
+				mediaType = "application/json",
+				examples = @ExampleObject(value = """
+					{
+					  "status": 200,
+					  "message": "여행 일정 목록을 조회했습니다.",
+					  "data": {
+					    "totalCount": 1,
+					    "travelPlans": [
+					      {
+					        "travelPlanId": 1,
+					        "name": "마카오 여행",
+					        "startDate": "2026-03-08",
+					        "endDate": "2026-03-12",
+					        "transportMode": "WALKING",
+					        "transportModeDisplayName": "도보",
+					        "interestCategories": [
+					          "RESTAURANT",
+					          "TOURIST_ATTRACTION",
+					          "CULTURAL_FACILITY"
+					        ],
+					        "experienceLevel": "LIGHT",
+					        "nights": 4,
+					        "days": 5
+					      }
+					    ]
+					  }
+					}
+					""")
+			)
+		),
+		@ApiResponse(responseCode = "401", description = "인증 정보가 없거나 유효하지 않음")
+	})
+	ResponseEntity<SuccessResponse<TravelPlanListResponse>> getTravelPlans(CurrentAuth currentAuth);
 
 	@Operation(
 		summary = "여행 일정 생성",
