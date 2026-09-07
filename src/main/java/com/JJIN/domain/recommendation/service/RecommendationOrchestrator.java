@@ -11,6 +11,7 @@ import com.JJIN.domain.onboarding.entity.TravelPlan;
 import com.JJIN.domain.onboarding.entity.enums.TourApiContentType;
 import com.JJIN.domain.onboarding.entity.enums.TravelSubcategory;
 import com.JJIN.domain.place.entity.Place;
+import com.JJIN.domain.recommendation.dto.CourseDraft;
 import com.JJIN.domain.recommendation.dto.RecommendationCandidate;
 import com.JJIN.domain.recommendation.dto.ScoredCandidate;
 import com.JJIN.domain.recommendation.dto.TravelProfile;
@@ -19,7 +20,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * 여행 추천 파이프라인 진입점(P0~P3).
+ * 여행 추천 파이프라인 진입점.
  * TravelPlan을 받아 프로파일 정규화 → 시군구 선정 → 후보 조회 → 하드 필터 → 스코어링 순으로 실행하고,
  * LLM에 전달할 역할별 상위 후보 목록을 반환한다.
  */
@@ -37,13 +38,14 @@ public class RecommendationOrchestrator {
 	private final PlaceScoringService scoringService;
 	private final PreferredCategoryResolver categoryResolver;
 	private final RecommendationHistoryStore historyStore;
+	private final CourseAssemblyService courseAssemblyService;
 
 	/**
-	 * TravelPlan 기준으로 추천 후보를 수집·필터·스코어링하여 역할별 상위 후보를 반환한다.
+	 * TravelPlan 기준으로 P0~P4를 실행해 LLM 코스 초안을 반환한다.
 	 * memberId는 추천이력 패널티 계산에 사용한다.
 	 */
 	@Transactional(readOnly = true)
-	public List<ScoredCandidate> recommend(final TravelPlan plan, final Long memberId) {
+	public CourseDraft recommend(final TravelPlan plan, final Long memberId) {
 		// P0: 여행 프로파일 정규화
 		TravelProfile profile = profileNormalizer.normalize(plan);
 		log.info("추천 시작: planId={}, slots={}, districts={}, level={}",
@@ -60,13 +62,13 @@ public class RecommendationOrchestrator {
 
 		if (contentTypes.isEmpty()) {
 			log.warn("선택된 콘텐츠 유형이 없어 빈 결과를 반환합니다: planId={}", plan.getId());
-			return List.of();
+			return null;
 		}
 
 		List<String> districts = candidatePoolService.selectDistricts(profile, plan.getRegion(), contentTypes);
 		if (districts.isEmpty()) {
 			log.warn("선정된 시군구가 없습니다: planId={}", plan.getId());
-			return List.of();
+			return null;
 		}
 
 		List<Place> places = candidatePoolService.collectCandidates(
@@ -93,6 +95,10 @@ public class RecommendationOrchestrator {
 		List<ScoredCandidate> top = scoringService.selectTopByRole(scored, TOP_CANDIDATES_PER_ROLE);
 		log.info("스코어링 완료: planId={}, topCount={}", plan.getId(), top.size());
 
-		return top;
+		// P4: LLM 코스 조립
+		CourseDraft draft = courseAssemblyService.assemble(top, profile, plan.getStartDate(), plan.getEndDate());
+		log.info("코스 초안 생성: planId={}, success={}", plan.getId(), draft != null);
+
+		return draft;
 	}
 }
