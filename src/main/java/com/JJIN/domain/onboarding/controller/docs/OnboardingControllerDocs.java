@@ -27,10 +27,10 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 public interface OnboardingControllerDocs {
 
 	@Operation(
-		summary = "온보딩 여행 기본 정보 저장",
+		summary = "[Deprecated] 기존 온보딩 여행 일정 생성",
 		description = """
-			온보딩 S1~S4에서 수집한 여행 기본 정보를 첫 번째 여행 일정으로 저장한다.
-			회원 역할 변경과 토큰 재발급은 /api/auth/role API에서 별도로 처리한다.
+			기존 클라이언트 호환을 위해 유지하는 일정 생성 API다.
+			신규 구현은 POST /api/travel-plans를 사용한다.
 
 			요청 필드
 			- regionId: 여행 지역 ID. regionUndecided가 true면 반드시 null, false면 regionId 필수
@@ -53,7 +53,8 @@ public interface OnboardingControllerDocs {
 			  - 요청 예: {"contentType":"RESTAURANT","subcategories":["KOREAN_FOOD","CAFE_TEAHOUSE"]}
 			- experienceLevel: LIGHT, NORMAL, DEEP
 			""",
-		security = @SecurityRequirement(name = "BearerAuth")
+		security = @SecurityRequirement(name = "BearerAuth"),
+		deprecated = true
 	)
 	@ApiResponses({
 		@ApiResponse(
@@ -64,7 +65,7 @@ public interface OnboardingControllerDocs {
 				examples = @ExampleObject(value = """
 					{
 					  "status": 201,
-					  "message": "첫 여행 일정을 생성했습니다.",
+					  "message": "여행 일정을 생성했습니다.",
 					  "data": {
 					    "travelPlanId": 1
 					  }

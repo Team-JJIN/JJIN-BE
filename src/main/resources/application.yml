@@ -1,3 +1,11 @@
 spring:
   profiles:
     active: local
+
+tour-api:
+  base-url: ${TOUR_API_BASE_URL:https://apis.data.go.kr/B551011}
+  service-key: ${TOUR_API_SERVICE_KEY:}
+  mobile-os: ETC
+  mobile-app: JJIN
+  candidate-cache-ttl: 6h
+  detail-cache-ttl: 24h

@@ -25,6 +25,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
+import jakarta.persistence.OrderBy;
 import jakarta.persistence.Table;
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -32,7 +33,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 /**
- * 회원의 여행 일정. 온보딩을 정상 진행하면 첫 번째 여행 일정이 생성된다.
+ * 회원의 여행 일정.
  */
 @Entity
 @Getter
@@ -84,6 +85,7 @@ public class TravelPlan extends BaseTimeEntity {
 		orphanRemoval = true,
 		fetch = FetchType.LAZY
 	)
+	@OrderBy("id ASC")
 	private List<TravelPreference> preferences = new ArrayList<>();
 
 	@Builder(access = AccessLevel.PRIVATE)

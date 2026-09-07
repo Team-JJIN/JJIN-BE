@@ -51,6 +51,7 @@ public class AuthService {
 		Member member = memberRepository.findBySocialId(userInfo.sub())
 			.orElseGet(() -> registerNewMember(userInfo));
 
+		normalizeLegacyOnboardingRole(member);
 		return issueTokens(member);
 	}
 
@@ -72,7 +73,7 @@ public class AuthService {
 				request.email(),
 				request.nickname(),
 				passwordEncoder.encode(request.password()),
-				Role.ONBOARDING
+				Role.MEMBER
 			)
 		);
 		termsService.saveAgreements(member.getId(), request.termsAgreements());
@@ -84,7 +85,7 @@ public class AuthService {
 	/**
 	 * 이메일/비밀번호 로그인. 자격증명을 검증하고 토큰을 발급한다.
 	 */
-	@Transactional(readOnly = true)
+	@Transactional
 	public AuthTokenResponse login(final LoginRequest request) {
 		Member member = memberRepository.findByEmail(request.email())
 			.orElseThrow(() -> new JjinException(MemberErrorCode.INVALID_CREDENTIALS));
@@ -94,6 +95,7 @@ public class AuthService {
 			throw new JjinException(MemberErrorCode.INVALID_CREDENTIALS);
 		}
 
+		normalizeLegacyOnboardingRole(member);
 		return issueTokens(member);
 	}
 
@@ -137,8 +139,17 @@ public class AuthService {
 	private Member registerNewMember(final GoogleUserInfo userInfo) {
 		log.info("신규 구글 회원 가입: socialId={}, email={}", userInfo.sub(), userInfo.email());
 		return memberRepository.save(
-			Member.createSocialMember(userInfo.email(), userInfo.name(), userInfo.sub(), Role.ONBOARDING)
+			Member.createSocialMember(userInfo.email(), userInfo.name(), userInfo.sub(), Role.MEMBER)
 		);
+	}
+
+	/**
+	 * 별도 온보딩 흐름 제거 이전에 가입한 회원도 다음 로그인부터 일반 회원으로 사용한다.
+	 */
+	private void normalizeLegacyOnboardingRole(final Member member) {
+		if (member.getRole() == Role.ONBOARDING) {
+			member.changeRole(Role.MEMBER);
+		}
 	}
 
 	private Authentication toAuthentication(final Member member) {
