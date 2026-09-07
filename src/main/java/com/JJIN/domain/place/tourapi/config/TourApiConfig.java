@@ -10,10 +10,9 @@ import org.springframework.web.client.RestClient;
 public class TourApiConfig {
 
 	@Bean
-	public RestClient tourApiRestClient(
-		final RestClient.Builder builder,
-		final TourApiProperties properties
-	) {
-		return builder.baseUrl(properties.baseUrl()).build();
+	public RestClient tourApiRestClient(final TourApiProperties properties) {
+		return RestClient.builder()
+			.baseUrl(properties.baseUrl())
+			.build();
 	}
 }
