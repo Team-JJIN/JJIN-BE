@@ -10,7 +10,7 @@ import org.springframework.stereotype.Service;
 
 import com.JJIN.domain.place.dto.WeeklySchedule;
 import com.JJIN.domain.place.entity.enums.OperatingInfoParseStatus;
-import com.JJIN.domain.recommendation.dto.PlaceCandidate;
+import com.JJIN.domain.recommendation.dto.RecommendationCandidate;
 import com.JJIN.domain.recommendation.dto.ScoredCandidate;
 import com.JJIN.domain.recommendation.dto.TravelProfile;
 
@@ -38,7 +38,7 @@ public class PlaceScoringService {
 	private final OpenStatusCalculator openStatusCalculator;
 
 	public ScoredCandidate score(
-		final PlaceCandidate candidate,
+		final RecommendationCandidate candidate,
 		final TravelProfile profile,
 		final Set<String> preferredMidCategoryCodes,
 		final Set<Long> recentlyRecommendedPlaceIds,
@@ -79,7 +79,7 @@ public class PlaceScoringService {
 	}
 
 	/** 중분류(lclsSystm2) 일치면 1.0, 아니면 콘텐츠 유형만 일치로 보아 0.4 */
-	private double categoryFit(final PlaceCandidate candidate, final Set<String> preferredMidCategoryCodes) {
+	private double categoryFit(final RecommendationCandidate candidate, final Set<String> preferredMidCategoryCodes) {
 		if (candidate.lclsSystm2Code() != null && preferredMidCategoryCodes.contains(candidate.lclsSystm2Code())) {
 			return CATEGORY_MID_MATCH;
 		}
@@ -87,14 +87,14 @@ public class PlaceScoringService {
 	}
 
 	/** 목표 로컬도와 장소 로컬도의 근접도. 로컬도 미상이면 중립값(0.5)으로 근사 */
-	private double localityFit(final PlaceCandidate candidate, final double targetLocality) {
+	private double localityFit(final RecommendationCandidate candidate, final double targetLocality) {
 		double placeLocality = candidate.localityScore() == null ? NEUTRAL_LOCALITY : candidate.localityScore();
 		return 1.0 - Math.abs(targetLocality - placeLocality);
 	}
 
 	/** 운영시간이 활동 시간대를 완전히 포함하면 1.0, 겹치기만 하면 0.6, 미상이면 0.3 */
 	private double timeFit(
-		final PlaceCandidate candidate,
+		final RecommendationCandidate candidate,
 		final TravelProfile profile,
 		final LocalDate tripStart,
 		final LocalDate tripEnd

@@ -5,7 +5,7 @@ import java.util.List;
 
 import org.springframework.stereotype.Service;
 
-import com.JJIN.domain.recommendation.dto.PlaceCandidate;
+import com.JJIN.domain.recommendation.dto.RecommendationCandidate;
 import com.JJIN.domain.recommendation.dto.TravelProfile;
 import com.JJIN.global.geo.GeoPoint;
 
@@ -26,8 +26,8 @@ public class CandidateFilterService {
 
 	private final OpenStatusCalculator openStatusCalculator;
 
-	public List<PlaceCandidate> applyHardFilters(
-		final List<PlaceCandidate> candidates,
+	public List<RecommendationCandidate> applyHardFilters(
+		final List<RecommendationCandidate> candidates,
 		final TravelProfile profile,
 		final LocalDate tripStart,
 		final LocalDate tripEnd
@@ -40,7 +40,7 @@ public class CandidateFilterService {
 	}
 
 	/** 좌표가 존재하고 대한민국 범위 안에 있는가 */
-	private boolean hasValidCoordinates(final PlaceCandidate candidate) {
+	private boolean hasValidCoordinates(final RecommendationCandidate candidate) {
 		GeoPoint location = candidate.location();
 		if (location == null) {
 			return false;
@@ -50,7 +50,7 @@ public class CandidateFilterService {
 	}
 
 	/** 축제라면 행사 기간이 여행 기간과 겹치는가 (축제가 아니면 통과) */
-	private boolean festivalDateMatches(final PlaceCandidate candidate, final LocalDate tripStart, final LocalDate tripEnd) {
+	private boolean festivalDateMatches(final RecommendationCandidate candidate, final LocalDate tripStart, final LocalDate tripEnd) {
 		if (!candidate.isFestival()) {
 			return true;
 		}
@@ -61,7 +61,7 @@ public class CandidateFilterService {
 
 	/** 여행 기간 중 하루라도 운영시간이 활동 시간대와 겹치는가 (운영시간 미상은 제외되지 않음) */
 	private boolean operatingOverlapsActivity(
-		final PlaceCandidate candidate,
+		final RecommendationCandidate candidate,
 		final TravelProfile profile,
 		final LocalDate tripStart,
 		final LocalDate tripEnd

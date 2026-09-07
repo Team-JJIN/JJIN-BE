@@ -9,10 +9,11 @@ import com.JJIN.domain.place.entity.enums.OperatingInfoParseStatus;
 import com.JJIN.global.geo.GeoPoint;
 
 /**
- * 추천 알고리즘이 다루는 후보 장소 계약(파이프라인 P2·P3 입력).
- * Place와 운영정보를 조합하고, 파싱된 주간 일정·예상 체류시간을 함께 담는다.
+ * 추천 알고리즘 전용 후보 모델(파이프라인 P2·P3 입력).
+ * 표시용 모델(domain/place/candidate/RecommendationCandidate)과 구분되며,
+ * 운영시간·로컬도·체류시간 등 알고리즘 계산에 필요한 필드를 담는다.
  */
-public record PlaceCandidate(
+public record RecommendationCandidate(
 	Long placeId,
 	TourApiContentType contentType,
 	String lclsSystm1Code,
