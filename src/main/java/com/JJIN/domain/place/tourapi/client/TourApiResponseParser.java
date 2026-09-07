@@ -7,10 +7,9 @@ import org.springframework.stereotype.Component;
 
 import com.JJIN.domain.place.tourapi.dto.TourApiPage;
 import com.JJIN.domain.place.tourapi.exception.TourApiClientException;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-
 import lombok.RequiredArgsConstructor;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.ObjectMapper;
 
 @Component
 @RequiredArgsConstructor

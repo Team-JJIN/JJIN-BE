@@ -21,7 +21,7 @@ import com.JJIN.domain.place.tourapi.dto.TourApiPlaceItem;
 import com.JJIN.domain.place.tourapi.exception.TourApiClientException;
 import com.JJIN.domain.place.tourapi.query.AreaPlaceQuery;
 import com.JJIN.domain.place.tourapi.query.FestivalQuery;
-import com.fasterxml.jackson.databind.JsonNode;
+import tools.jackson.databind.JsonNode;
 
 import lombok.extern.slf4j.Slf4j;
 

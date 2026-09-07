@@ -9,11 +9,10 @@ import org.springframework.stereotype.Repository;
 import com.JJIN.domain.place.tourapi.dto.TourApiIntroItem;
 import com.JJIN.domain.place.tourapi.dto.TourApiPage;
 import com.JJIN.domain.place.tourapi.dto.TourApiPlaceItem;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
-
 import lombok.RequiredArgsConstructor;
+import tools.jackson.core.JacksonException;
+import tools.jackson.core.type.TypeReference;
+import tools.jackson.databind.ObjectMapper;
 
 @Repository
 @RequiredArgsConstructor
@@ -33,7 +32,7 @@ public class TourApiCacheRepository {
 		}
 		try {
 			return Optional.of(objectMapper.readValue(value, PLACE_PAGE_TYPE));
-		} catch (JsonProcessingException exception) {
+		} catch (JacksonException exception) {
 			redisTemplate.delete(key);
 			return Optional.empty();
 		}
@@ -78,7 +77,7 @@ public class TourApiCacheRepository {
 		}
 		try {
 			return Optional.of(objectMapper.readValue(value, type));
-		} catch (JsonProcessingException exception) {
+		} catch (JacksonException exception) {
 			redisTemplate.delete(key);
 			return Optional.empty();
 		}
@@ -87,7 +86,7 @@ public class TourApiCacheRepository {
 	private void save(final String key, final Object value, final Duration ttl) {
 		try {
 			redisTemplate.opsForValue().set(key, objectMapper.writeValueAsString(value), ttl);
-		} catch (JsonProcessingException exception) {
+		} catch (JacksonException exception) {
 			throw new IllegalStateException("TourAPI 캐시 직렬화에 실패했습니다.", exception);
 		}
 	}
