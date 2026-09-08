@@ -16,3 +16,10 @@ tour-api:
     page-size: 5000
     max-pages: 10
     lookback-days: 30
+  attraction-concentration:
+    service-path: TatsCnctrRateService
+    operation: tatsCnctrRatedList
+    cache-ttl: 24h
+    page-size: 100
+    max-pages: 20
+    baseline-weight: 0.5

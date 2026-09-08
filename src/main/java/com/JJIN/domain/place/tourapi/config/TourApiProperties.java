@@ -24,7 +24,9 @@ public record TourApiProperties(
 
 	@DefaultValue PlaceSync placeSync,
 
-	@DefaultValue VisitorStats visitorStats
+	@DefaultValue VisitorStats visitorStats,
+
+	@DefaultValue AttractionConcentration attractionConcentration
 ) {
 
 	public record PlaceSync(
@@ -39,6 +41,20 @@ public record TourApiProperties(
 		@DefaultValue("5000") int pageSize,
 		@DefaultValue("10") int maxPages,
 		@DefaultValue("30") int lookbackDays
+	) {
+	}
+
+	/**
+	 * KTO 관광지 집중률 API 설정. 시군구 단위 baseline에 per-관광지 modifier를 곱해
+	 * 같은 시군구 안에서도 관광지별 로컬도 세밀도를 확보한다.
+	 */
+	public record AttractionConcentration(
+		@DefaultValue("TatsCnctrRateService") String servicePath,
+		@DefaultValue("tatsCnctrRatedList") String operation,
+		@DefaultValue("24h") Duration cacheTtl,
+		@DefaultValue("100") int pageSize,
+		@DefaultValue("20") int maxPages,
+		@DefaultValue("0.5") double baselineWeight
 	) {
 	}
 }
