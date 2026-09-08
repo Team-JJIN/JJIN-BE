@@ -7,5 +7,12 @@ tour-api:
   service-key: ${TOUR_API_SERVICE_KEY:}
   mobile-os: ETC
   mobile-app: JJIN
-  candidate-cache-ttl: 6h
-  detail-cache-ttl: 24h
+  place-sync:
+    candidate-cache-ttl: 6h
+    detail-cache-ttl: 24h
+  visitor-stats:
+    operation: locgoRegnVisitrDDList
+    cache-ttl: 24h
+    page-size: 5000
+    max-pages: 10
+    lookback-days: 30

@@ -7,12 +7,15 @@ import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
 
+import com.JJIN.domain.onboarding.entity.enums.ExperienceLevel;
 import com.JJIN.domain.place.dto.WeeklySchedule;
 import com.JJIN.domain.place.entity.Place;
 import com.JJIN.domain.place.entity.PlaceOperatingInfo;
 import com.JJIN.domain.place.entity.enums.OperatingInfoParseStatus;
 import com.JJIN.domain.place.repository.PlaceOperatingInfoRepository;
 import com.JJIN.domain.recommendation.dto.RecommendationCandidate;
+import com.JJIN.domain.recommendation.locality.service.LocalityScoreCalculator;
+import com.JJIN.domain.recommendation.policy.LocalityPolicy;
 import com.JJIN.domain.recommendation.policy.StayDurationPolicy;
 import com.JJIN.global.geo.GeoPoint;
 
@@ -28,6 +31,7 @@ public class RecommendationCandidateAssembler {
 
 	private final PlaceOperatingInfoRepository operatingInfoRepository;
 	private final WeeklyScheduleParser weeklyScheduleParser;
+	private final LocalityScoreCalculator localityScoreCalculator;
 
 	public List<RecommendationCandidate> assemble(final List<Place> places) {
 		if (places.isEmpty()) {
@@ -39,16 +43,34 @@ public class RecommendationCandidateAssembler {
 			operatingInfoRepository.findAllByPlaceIdIn(placeIds).stream()
 				.collect(Collectors.toMap(PlaceOperatingInfo::getPlaceId, Function.identity()));
 
+		List<Place> needsLocality = places.stream()
+			.filter(place -> place.getLocalityScore() == null)
+			.toList();
+		Map<Long, Double> resolvedLocality = needsLocality.isEmpty()
+			? Map.of()
+			: localityScoreCalculator.resolveScores(needsLocality);
+
 		return places.stream()
-			.map(place -> toCandidate(place, operatingInfoByPlaceId.get(place.getId())))
+			.map(place -> toCandidate(
+				place, operatingInfoByPlaceId.get(place.getId()), resolvedLocality.get(place.getId())))
 			.toList();
 	}
 
-	private RecommendationCandidate toCandidate(final Place place, final PlaceOperatingInfo operatingInfo) {
+	private RecommendationCandidate toCandidate(
+		final Place place,
+		final PlaceOperatingInfo operatingInfo,
+		final Double resolvedLocality
+	) {
 		WeeklySchedule weeklySchedule = operatingInfo == null
 			? null : weeklyScheduleParser.parse(operatingInfo.getWeeklyScheduleJson());
 		OperatingInfoParseStatus parseStatus = operatingInfo == null
 			? OperatingInfoParseStatus.NOT_PARSED : operatingInfo.getParseStatus();
+
+		Double localityScore = place.getLocalityScore() != null
+			? place.getLocalityScore() : resolvedLocality;
+		ExperienceLevel localityLevel = place.getLocalityLevel() != null
+			? place.getLocalityLevel()
+			: (localityScore == null ? null : LocalityPolicy.classify(localityScore));
 
 		return new RecommendationCandidate(
 			place.getId(),
@@ -56,8 +78,8 @@ public class RecommendationCandidateAssembler {
 			place.getLclsSystm1Code(),
 			place.getLclsSystm2Code(),
 			GeoPoint.of(place.getLatitude(), place.getLongitude()),
-			place.getLocalityScore(),
-			place.getLocalityLevel(),
+			localityScore,
+			localityLevel,
 			parseStatus,
 			weeklySchedule,
 			place.getFestivalStartDate(),
