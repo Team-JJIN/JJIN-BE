@@ -57,7 +57,7 @@ public class CachedTourApiGateway {
 
 		Optional<TourApiPlaceItem> fetched = tourApiClient.getCommonDetail(locale, contentId);
 		fetched.ifPresent(item -> safeCacheWrite(
-			() -> cacheRepository.saveCommonDetail(key, item, properties.detailCacheTtl())
+			() -> cacheRepository.saveCommonDetail(key, item, properties.placeSync().detailCacheTtl())
 		));
 		return fetched;
 	}
@@ -75,7 +75,7 @@ public class CachedTourApiGateway {
 
 		Optional<TourApiIntroItem> fetched = tourApiClient.getIntroDetail(locale, contentId, contentType);
 		fetched.ifPresent(item -> safeCacheWrite(
-			() -> cacheRepository.saveIntroDetail(key, item, properties.detailCacheTtl())
+			() -> cacheRepository.saveIntroDetail(key, item, properties.placeSync().detailCacheTtl())
 		));
 		return fetched;
 	}
@@ -92,7 +92,7 @@ public class CachedTourApiGateway {
 		}
 
 		TourApiPage<TourApiPlaceItem> fetched = fetcher.get();
-		safeCacheWrite(() -> cacheRepository.savePlacePage(key, fetched, properties.candidateCacheTtl()));
+		safeCacheWrite(() -> cacheRepository.savePlacePage(key, fetched, properties.placeSync().candidateCacheTtl()));
 		return fetched;
 	}
 
