@@ -38,6 +38,10 @@ out/
 ### VS Code ###
 .vscode/
 
+### macOS ###
+.DS_Store
+**/.DS_Store
+
 ### Docker / Infra ###
 .env
 
