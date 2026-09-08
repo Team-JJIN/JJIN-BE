@@ -84,6 +84,29 @@ public class CourseAssemblyService {
 		final LocalDate tripStart,
 		final LocalDate tripEnd
 	) {
+		return assemble(scored, profile, tripStart, tripEnd, List.of());
+	}
+
+	/**
+	 * 이전 코스의 위반 사유를 프롬프트에 포함해 코스를 다시 생성한다.
+	 */
+	public CourseDraft reassemble(
+		final List<ScoredCandidate> scored,
+		final TravelProfile profile,
+		final LocalDate tripStart,
+		final LocalDate tripEnd,
+		final List<String> previousViolations
+	) {
+		return assemble(scored, profile, tripStart, tripEnd, previousViolations);
+	}
+
+	private CourseDraft assemble(
+		final List<ScoredCandidate> scored,
+		final TravelProfile profile,
+		final LocalDate tripStart,
+		final LocalDate tripEnd,
+		final List<String> previousViolations
+	) {
 		if (scored.isEmpty()) {
 			return null;
 		}
@@ -92,7 +115,7 @@ public class CourseAssemblyService {
 		List<Long> placeIds = scored.stream().map(s -> s.candidate().placeId()).toList();
 		Map<Long, String> nameByPlaceId = fetchNames(placeIds);
 
-		String userPrompt = buildUserPrompt(scored, nameByPlaceId, profile, tripStart, tripEnd);
+		String userPrompt = buildUserPrompt(scored, nameByPlaceId, profile, tripStart, tripEnd, previousViolations);
 		log.debug("LLM 코스 조립 요청: candidates={}, days={}",
 			scored.size(), profile.tripDays());
 
@@ -134,9 +157,16 @@ public class CourseAssemblyService {
 		final Map<Long, String> nameByPlaceId,
 		final TravelProfile profile,
 		final LocalDate tripStart,
-		final LocalDate tripEnd
+		final LocalDate tripEnd,
+		final List<String> previousViolations
 	) {
 		StringBuilder sb = new StringBuilder();
+
+		if (previousViolations != null && !previousViolations.isEmpty()) {
+			sb.append("[이전 코스의 문제점 - 반드시 수정하라]\n");
+			previousViolations.forEach(v -> sb.append("- ").append(v).append("\n"));
+			sb.append("\n");
+		}
 
 		sb.append("[사용자 여행 조건]\n");
 		sb.append("- 여행 기간: ").append(tripStart).append(" ~ ").append(tripEnd)

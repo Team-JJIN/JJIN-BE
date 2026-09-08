@@ -7,6 +7,8 @@ import java.util.stream.Collectors;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Map;
+
 import com.JJIN.domain.onboarding.entity.TravelPlan;
 import com.JJIN.domain.onboarding.entity.enums.TourApiContentType;
 import com.JJIN.domain.onboarding.entity.enums.TravelSubcategory;
@@ -39,6 +41,7 @@ public class RecommendationOrchestrator {
 	private final PreferredCategoryResolver categoryResolver;
 	private final RecommendationHistoryStore historyStore;
 	private final CourseAssemblyService courseAssemblyService;
+	private final CourseValidationService courseValidationService;
 
 	/**
 	 * TravelPlan 기준으로 P0~P4를 실행해 LLM 코스 초안을 반환한다.
@@ -99,6 +102,39 @@ public class RecommendationOrchestrator {
 		CourseDraft draft = courseAssemblyService.assemble(top, profile, plan.getStartDate(), plan.getEndDate());
 		log.info("코스 초안 생성: planId={}, success={}", plan.getId(), draft != null);
 
+		// P5: 검증 → 위반 시 위반 내용을 담아 1회 재생성
+		if (draft != null) {
+			draft = validateAndReassemble(draft, top, profile, plan);
+		}
+
 		return draft;
+	}
+
+	private CourseDraft validateAndReassemble(
+		final CourseDraft draft,
+		final List<ScoredCandidate> top,
+		final TravelProfile profile,
+		final TravelPlan plan
+	) {
+		Map<Long, RecommendationCandidate> candidatesById = top.stream()
+			.collect(Collectors.toMap(s -> s.candidate().placeId(), ScoredCandidate::candidate, (a, b) -> a));
+
+		List<String> violations = courseValidationService.verify(
+			draft, candidatesById, profile, plan.getStartDate());
+		if (violations.isEmpty()) {
+			return draft;
+		}
+
+		log.warn("코스 검증 위반 {}건, 재생성 시도: planId={}", violations.size(), plan.getId());
+		CourseDraft retried = courseAssemblyService.reassemble(
+			top, profile, plan.getStartDate(), plan.getEndDate(), violations);
+		if (retried == null) {
+			return draft;
+		}
+
+		List<String> retryViolations = courseValidationService.verify(
+			retried, candidatesById, profile, plan.getStartDate());
+		// 재생성 결과가 더 낫거나 같으면 채택
+		return retryViolations.size() <= violations.size() ? retried : draft;
 	}
 }
