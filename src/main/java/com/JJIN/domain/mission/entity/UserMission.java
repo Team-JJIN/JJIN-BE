@@ -1,15 +1,15 @@
 package com.JJIN.domain.mission.entity;
 
 import com.JJIN.domain.member.entity.Member;
+import com.JJIN.domain.mission.entity.converter.UserMissionStatusConverter;
 import com.JJIN.domain.mission.entity.enums.UserMissionStatus;
 import com.JJIN.domain.onboarding.entity.TravelPlan;
 
 import java.time.LocalDateTime;
 
 import jakarta.persistence.Column;
+import jakarta.persistence.Convert;
 import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -64,9 +64,9 @@ public class UserMission {
 	private TravelPlan travelPlan;
 
 	@Builder.Default
-	@Enumerated(EnumType.STRING)
+	@Convert(converter = UserMissionStatusConverter.class)
 	@Column(nullable = false, length = 20)
-	private UserMissionStatus status = UserMissionStatus.ADDED;
+	private UserMissionStatus status = UserMissionStatus.PROOF_REQUIRED;
 
 	@Column(nullable = false, updatable = false)
 	private LocalDateTime addedAt;
@@ -83,8 +83,12 @@ public class UserMission {
 			.member(member)
 			.mission(mission)
 			.travelPlan(travelPlan)
-			.status(UserMissionStatus.ADDED)
+			.status(UserMissionStatus.PROOF_REQUIRED)
 			.build();
+	}
+
+	public void markUploadPending() {
+		this.status = UserMissionStatus.UPLOAD_PENDING;
 	}
 
 	public void complete() {
