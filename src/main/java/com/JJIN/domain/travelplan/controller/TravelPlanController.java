@@ -70,11 +70,11 @@ public class TravelPlanController implements TravelPlanControllerDocs {
 	}
 
 	@Override
-	@GetMapping("/{planId}/course/days/{dayNumber}")
+	@GetMapping("/{planId}/course")
 	public ResponseEntity<SuccessResponse<TravelCourseDayResponse>> getCourseDay(
 		@CurrentMember CurrentAuth currentAuth,
 		@PathVariable Long planId,
-		@PathVariable int dayNumber,
+		@RequestParam(name = "dayNumber", defaultValue = "1") int dayNumber,
 		@RequestParam(name = "locale", defaultValue = "KO") PlaceLocale locale
 	) {
 		validateCurrentAuth(currentAuth);
