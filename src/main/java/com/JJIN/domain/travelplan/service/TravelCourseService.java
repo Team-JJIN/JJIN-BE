@@ -23,8 +23,11 @@ import com.JJIN.domain.place.entity.enums.OperatingInfoParseStatus;
 import com.JJIN.domain.place.entity.enums.PlaceLocale;
 import com.JJIN.domain.place.repository.PlaceLocalizedContentRepository;
 import com.JJIN.domain.place.repository.PlaceOperatingInfoRepository;
+import com.JJIN.domain.place.repository.PlaceRepository;
 import com.JJIN.domain.place.schedule.OpenStatusCalculator;
 import com.JJIN.domain.place.schedule.WeeklySchedule;
+import com.JJIN.domain.travelplan.dto.request.AddCourseStopRequest;
+import com.JJIN.domain.travelplan.dto.response.AddCourseStopResponse;
 import com.JJIN.domain.travelplan.dto.response.CourseStopResponse;
 import com.JJIN.domain.travelplan.dto.response.TravelCourseDayResponse;
 import com.JJIN.domain.travelplan.entity.TravelCourseStop;
@@ -46,9 +49,11 @@ import tools.jackson.databind.ObjectMapper;
 public class TravelCourseService {
 
 	private static final double EARTH_RADIUS_METERS = 6_371_000.0;
+	private static final int DEFAULT_STAY_MINUTES = 60;
 
 	private final TravelPlanRepository travelPlanRepository;
 	private final TravelCourseStopRepository courseStopRepository;
+	private final PlaceRepository placeRepository;
 	private final PlaceLocalizedContentRepository localizedContentRepository;
 	private final PlaceOperatingInfoRepository operatingInfoRepository;
 	private final OpenStatusCalculator openStatusCalculator;
@@ -92,6 +97,42 @@ public class TravelCourseService {
 			stopResponses.size(),
 			stopResponses
 		);
+	}
+
+	/**
+	 * 일차 코스의 마지막에 방문지를 추가한다.
+	 * planned 시간은 null, planned_stay_minutes는 기본값(60분)으로 세팅.
+	 */
+	@Transactional
+	public AddCourseStopResponse addStop(
+		final Long memberId,
+		final Long planId,
+		final AddCourseStopRequest request
+	) {
+		TravelPlan plan = travelPlanRepository.findById(planId)
+			.orElseThrow(() -> new JjinException(TravelPlanErrorCode.TRAVEL_PLAN_NOT_FOUND));
+
+		if (!plan.getMember().getId().equals(memberId)) {
+			throw new JjinException(TravelPlanErrorCode.TRAVEL_PLAN_FORBIDDEN);
+		}
+
+		int dayNumber = request.dayNumber();
+		int totalDays = (int) (plan.getEndDate().toEpochDay() - plan.getStartDate().toEpochDay()) + 1;
+		if (dayNumber < 1 || dayNumber > totalDays) {
+			throw new JjinException(TravelPlanErrorCode.INVALID_DAY_NUMBER);
+		}
+
+		Place place = placeRepository.findById(request.placeId())
+			.orElseThrow(() -> new JjinException(TravelPlanErrorCode.PLACE_NOT_FOUND));
+
+		int nextOrder = courseStopRepository.findMaxVisitOrder(planId, dayNumber).orElse(0) + 1;
+
+		TravelCourseStop stop = TravelCourseStop.create(
+			plan, dayNumber, nextOrder, place, null, null, DEFAULT_STAY_MINUTES
+		);
+		TravelCourseStop saved = courseStopRepository.save(stop);
+
+		return AddCourseStopResponse.of(saved.getId(), dayNumber, nextOrder);
 	}
 
 	private List<CourseStopResponse> buildStopResponses(

@@ -13,7 +13,9 @@ import org.springframework.web.bind.annotation.RestController;
 import com.JJIN.domain.place.entity.enums.PlaceLocale;
 
 import com.JJIN.domain.travelplan.controller.docs.TravelPlanControllerDocs;
+import com.JJIN.domain.travelplan.dto.request.AddCourseStopRequest;
 import com.JJIN.domain.travelplan.dto.request.CreateTravelPlanRequest;
+import com.JJIN.domain.travelplan.dto.response.AddCourseStopResponse;
 import com.JJIN.domain.travelplan.dto.response.CreateTravelPlanResponse;
 import com.JJIN.domain.travelplan.dto.response.TravelCourseDayResponse;
 import com.JJIN.domain.travelplan.dto.response.TravelPlanListResponse;
@@ -84,6 +86,22 @@ public class TravelPlanController implements TravelPlanControllerDocs {
 				TravelPlanSuccessCode.TRAVEL_COURSE_DAY_SUCCESS,
 				travelCourseService.getCourseDay(currentAuth.memberId(), planId, dayNumber, locale)
 			)
+		);
+	}
+
+	@Override
+	@PostMapping("/{planId}/course/stops")
+	public ResponseEntity<SuccessResponse<AddCourseStopResponse>> addCourseStop(
+		@CurrentMember CurrentAuth currentAuth,
+		@PathVariable Long planId,
+		@Valid @RequestBody AddCourseStopRequest request
+	) {
+		validateCurrentAuth(currentAuth);
+
+		AddCourseStopResponse response = travelCourseService.addStop(
+			currentAuth.memberId(), planId, request);
+		return ResponseEntity.status(HttpStatus.CREATED).body(
+			SuccessResponse.of(TravelPlanSuccessCode.COURSE_STOP_ADD_SUCCESS, response)
 		);
 	}
 

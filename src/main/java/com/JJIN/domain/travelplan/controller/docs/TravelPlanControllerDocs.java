@@ -3,7 +3,9 @@ package com.JJIN.domain.travelplan.controller.docs;
 import org.springframework.http.ResponseEntity;
 
 import com.JJIN.domain.place.entity.enums.PlaceLocale;
+import com.JJIN.domain.travelplan.dto.request.AddCourseStopRequest;
 import com.JJIN.domain.travelplan.dto.request.CreateTravelPlanRequest;
+import com.JJIN.domain.travelplan.dto.response.AddCourseStopResponse;
 import com.JJIN.domain.travelplan.dto.response.CreateTravelPlanResponse;
 import com.JJIN.domain.travelplan.dto.response.TravelCourseDayResponse;
 import com.JJIN.domain.travelplan.dto.response.TravelPlanListResponse;
@@ -104,7 +106,8 @@ public interface TravelPlanControllerDocs {
 	@Operation(
 		summary = "여행 코스 일차별 방문지 목록 조회",
 		description = """
-			특정 여행 일정의 n일차 코스(방문지 목록)를 순서대로 조회한다.
+			특정 여행 일정의 코스(방문지 목록)를 일차 기준으로 순서대로 조회한다.
+			dayNumber 쿼리 파라미터 생략 시 1일차를 조회한다.
 			상단 정보(여행명·일차·해당 일자·전체 일수)와 방문지 목록을 함께 반환하며,
 			두 번째 방문지부터는 이전 방문지와의 직선거리(m)를 정수형으로 제공한다.
 			""",
@@ -168,7 +171,44 @@ public interface TravelPlanControllerDocs {
 	ResponseEntity<SuccessResponse<TravelCourseDayResponse>> getCourseDay(
 		CurrentAuth currentAuth,
 		@Parameter(description = "여행 일정 ID", example = "42") Long planId,
-		@Parameter(description = "1부터 시작하는 일차 번호", example = "1") int dayNumber,
+		@Parameter(description = "1부터 시작하는 일차 번호. 생략 시 1", example = "1") int dayNumber,
 		@Parameter(description = "표시 언어 (KO, EN, JA). 기본값 KO", example = "KO") PlaceLocale locale
+	);
+
+	@Operation(
+		summary = "여행 코스 방문지 추가",
+		description = """
+			요청 본문의 dayNumber 일차 코스 마지막에 방문지를 추가한다.
+			""",
+		security = @SecurityRequirement(name = "BearerAuth")
+	)
+	@ApiResponses({
+		@ApiResponse(
+			responseCode = "201",
+			description = "방문지 추가 성공",
+			content = @Content(
+				mediaType = "application/json",
+				examples = @ExampleObject(value = """
+					{
+					  "status": 201,
+					  "message": "여행 코스에 방문지를 추가했습니다.",
+					  "data": {
+					    "stopId": 12,
+					    "dayNumber": 1,
+					    "visitOrder": 3
+					  }
+					}
+					""")
+			)
+		),
+		@ApiResponse(responseCode = "400", description = "요청 파라미터/일차 범위 오류"),
+		@ApiResponse(responseCode = "401", description = "인증 정보가 없거나 유효하지 않음"),
+		@ApiResponse(responseCode = "403", description = "본인의 여행 일정만 수정 가능"),
+		@ApiResponse(responseCode = "404", description = "여행 일정 또는 장소를 찾을 수 없음")
+	})
+	ResponseEntity<SuccessResponse<AddCourseStopResponse>> addCourseStop(
+		CurrentAuth currentAuth,
+		@Parameter(description = "여행 일정 ID", example = "42") Long planId,
+		AddCourseStopRequest request
 	);
 }
