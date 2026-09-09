@@ -26,6 +26,8 @@ public enum MissionSuccessCode implements BaseCode {
 	MISSION_ADD_TO_PLAN_SUCCESS(HttpStatus.OK, "찜 설정이 완료되었습니다."),
 	MISSION_REMOVE_FROM_PLAN_SUCCESS(HttpStatus.OK, "찜 설정이 해제되었습니다."),
 	MISSION_LIKE_STATUS_SUCCESS(HttpStatus.OK, "일정 별 해당 미션의 찜 여부가 조회되었습니다."),
+	TRAVEL_PLAN_MISSION_LIST_SUCCESS(HttpStatus.OK, "일정 미션 목록을 조회했습니다."),
+	TRAVEL_PLAN_MISSION_DELETE_SUCCESS(HttpStatus.OK, "일정에서 미션을 삭제했습니다."),
 	;
 
 	private final HttpStatus httpStatus;
