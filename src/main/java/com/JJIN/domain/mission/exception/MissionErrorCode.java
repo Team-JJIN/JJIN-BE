@@ -29,6 +29,7 @@ public enum MissionErrorCode implements BaseCode {
 	404 NOT FOUND
 	 */
 	MISSION_NOT_FOUND(HttpStatus.NOT_FOUND, "미션을 찾을 수 없습니다."),
+	USER_MISSION_NOT_FOUND(HttpStatus.NOT_FOUND, "일정에 담긴 미션을 찾을 수 없습니다."),
 	MISSION_PROOF_NOT_FOUND(HttpStatus.NOT_FOUND, "미션 인증글을 찾을 수 없습니다."),
 	TRAVEL_PLAN_NOT_FOUND(HttpStatus.NOT_FOUND, "여행 일정을 찾을 수 없습니다."),
 
