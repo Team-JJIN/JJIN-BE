@@ -3,16 +3,22 @@ package com.JJIN.domain.travelplan.controller;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+
+import com.JJIN.domain.place.entity.enums.PlaceLocale;
 
 import com.JJIN.domain.travelplan.controller.docs.TravelPlanControllerDocs;
 import com.JJIN.domain.travelplan.dto.request.CreateTravelPlanRequest;
 import com.JJIN.domain.travelplan.dto.response.CreateTravelPlanResponse;
+import com.JJIN.domain.travelplan.dto.response.TravelCourseDayResponse;
 import com.JJIN.domain.travelplan.dto.response.TravelPlanListResponse;
 import com.JJIN.domain.travelplan.exception.TravelPlanSuccessCode;
+import com.JJIN.domain.travelplan.service.TravelCourseService;
 import com.JJIN.domain.travelplan.service.TravelPlanService;
 import com.JJIN.global.auth.annotation.CurrentMember;
 import com.JJIN.global.auth.dto.CurrentAuth;
@@ -29,6 +35,7 @@ import lombok.RequiredArgsConstructor;
 public class TravelPlanController implements TravelPlanControllerDocs {
 
 	private final TravelPlanService travelPlanService;
+	private final TravelCourseService travelCourseService;
 
 	@Override
 	@GetMapping
@@ -58,6 +65,24 @@ public class TravelPlanController implements TravelPlanControllerDocs {
 			SuccessResponse.of(
 				TravelPlanSuccessCode.TRAVEL_PLAN_CREATE_SUCCESS,
 				CreateTravelPlanResponse.of(travelPlanId)
+			)
+		);
+	}
+
+	@Override
+	@GetMapping("/{planId}/course/days/{dayNumber}")
+	public ResponseEntity<SuccessResponse<TravelCourseDayResponse>> getCourseDay(
+		@CurrentMember CurrentAuth currentAuth,
+		@PathVariable Long planId,
+		@PathVariable int dayNumber,
+		@RequestParam(name = "locale", defaultValue = "KO") PlaceLocale locale
+	) {
+		validateCurrentAuth(currentAuth);
+
+		return ResponseEntity.ok(
+			SuccessResponse.of(
+				TravelPlanSuccessCode.TRAVEL_COURSE_DAY_SUCCESS,
+				travelCourseService.getCourseDay(currentAuth.memberId(), planId, dayNumber, locale)
 			)
 		);
 	}
