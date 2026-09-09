@@ -6,9 +6,11 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 import org.springframework.data.domain.PageRequest;
@@ -24,6 +26,7 @@ import com.JJIN.domain.mission.dto.response.MissionProofFeedItemResponse;
 import com.JJIN.domain.mission.dto.response.MissionProofFeedResponse;
 import com.JJIN.domain.mission.dto.response.MissionProofLikeToggleResponse;
 import com.JJIN.domain.mission.dto.response.MissionProofMissionSummaryResponse;
+import com.JJIN.domain.mission.dto.response.PresignedUrlResponse;
 import com.JJIN.domain.mission.entity.HotMissionSnapshot;
 import com.JJIN.domain.mission.entity.Mission;
 import com.JJIN.domain.mission.entity.MissionProof;
@@ -36,6 +39,7 @@ import com.JJIN.domain.mission.repository.MissionProofRepository;
 import com.JJIN.domain.mission.repository.UserMissionRepository;
 import com.JJIN.domain.mission.repository.dto.MissionMetricProjection;
 import com.JJIN.global.exception.JjinException;
+import com.JJIN.global.s3.S3PresignedUrlService;
 
 import lombok.RequiredArgsConstructor;
 
@@ -49,6 +53,10 @@ public class MissionProofService {
 	private static final int DEFAULT_SIZE = 10;
 	private static final int MAX_SIZE = 50;
 	private static final ZoneId KST = ZoneId.of("Asia/Seoul");
+	private static final String MISSION_PROOF_IMAGE_PREFIX = "mission-proof/";
+	private static final Set<String> ALLOWED_IMAGE_CONTENT_TYPES = Set.of(
+		"image/jpeg", "image/jpg", "image/png", "image/gif", "image/webp"
+	);
 
 	private final MissionProofRepository missionProofRepository;
 	private final MissionProofLikeRepository missionProofLikeRepository;
@@ -56,6 +64,21 @@ public class MissionProofService {
 	private final HotMissionSnapshotRepository hotMissionSnapshotRepository;
 	private final MemberRepository memberRepository;
 	private final Clock clock;
+	private final S3PresignedUrlService s3PresignedUrlService;
+
+	public PresignedUrlResponse createProofImagePresignedUrl(
+		final String fileName,
+		final String contentType
+	) {
+		String normalizedContentType = contentType.toLowerCase(Locale.ROOT);
+		if (!ALLOWED_IMAGE_CONTENT_TYPES.contains(normalizedContentType)) {
+			throw new JjinException(MissionErrorCode.UNSUPPORTED_IMAGE_TYPE);
+		}
+
+		String key = MISSION_PROOF_IMAGE_PREFIX + UUID.randomUUID() + "_" + fileName;
+		String presignedUrl = s3PresignedUrlService.generatePutPresignedUrl(key, normalizedContentType);
+		return PresignedUrlResponse.of(presignedUrl, key);
+	}
 
 	@Transactional(readOnly = true)
 	public MissionProofFeedResponse getFeed(
