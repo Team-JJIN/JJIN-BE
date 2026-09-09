@@ -1,7 +1,5 @@
 package com.JJIN.domain.travelplan.entity;
 
-import java.time.LocalTime;
-
 import com.JJIN.domain.onboarding.entity.TravelPlan;
 import com.JJIN.domain.place.entity.Place;
 import com.JJIN.global.common.BaseTimeEntity;
@@ -59,51 +57,30 @@ public class TravelCourseStop extends BaseTimeEntity {
 	@JoinColumn(name = "place_id", nullable = false)
 	private Place place;
 
-	@Column(name = "planned_start_time")
-	private LocalTime plannedStartTime;
-
-	@Column(name = "planned_end_time")
-	private LocalTime plannedEndTime;
-
-	@Column(name = "planned_stay_minutes", nullable = false)
-	private int plannedStayMinutes;
-
 	@Builder(access = AccessLevel.PRIVATE)
 	private TravelCourseStop(
 		final TravelPlan travelPlan,
 		final int dayNumber,
 		final int visitOrder,
-		final Place place,
-		final LocalTime plannedStartTime,
-		final LocalTime plannedEndTime,
-		final int plannedStayMinutes
+		final Place place
 	) {
 		this.travelPlan = travelPlan;
 		this.dayNumber = dayNumber;
 		this.visitOrder = visitOrder;
 		this.place = place;
-		this.plannedStartTime = plannedStartTime;
-		this.plannedEndTime = plannedEndTime;
-		this.plannedStayMinutes = plannedStayMinutes;
 	}
 
 	public static TravelCourseStop create(
 		final TravelPlan travelPlan,
 		final int dayNumber,
 		final int visitOrder,
-		final Place place,
-		final LocalTime plannedStartTime,
-		final LocalTime plannedEndTime,
-		final int plannedStayMinutes
+		final Place place
 	) {
 		return TravelCourseStop.builder()
 			.travelPlan(travelPlan)
 			.dayNumber(dayNumber)
 			.visitOrder(visitOrder)
 			.place(place)
-			.plannedStartTime(plannedStartTime)
-			.plannedEndTime(plannedEndTime)
-			.plannedStayMinutes(plannedStayMinutes)
 			.build();
 	}
 }

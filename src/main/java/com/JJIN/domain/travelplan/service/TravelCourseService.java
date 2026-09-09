@@ -49,7 +49,6 @@ import tools.jackson.databind.ObjectMapper;
 public class TravelCourseService {
 
 	private static final double EARTH_RADIUS_METERS = 6_371_000.0;
-	private static final int DEFAULT_STAY_MINUTES = 60;
 
 	private final TravelPlanRepository travelPlanRepository;
 	private final TravelCourseStopRepository courseStopRepository;
@@ -101,7 +100,6 @@ public class TravelCourseService {
 
 	/**
 	 * 일차 코스의 마지막에 방문지를 추가한다.
-	 * planned 시간은 null, planned_stay_minutes는 기본값(60분)으로 세팅.
 	 */
 	@Transactional
 	public AddCourseStopResponse addStop(
@@ -127,9 +125,7 @@ public class TravelCourseService {
 
 		int nextOrder = courseStopRepository.findMaxVisitOrder(planId, dayNumber).orElse(0) + 1;
 
-		TravelCourseStop stop = TravelCourseStop.create(
-			plan, dayNumber, nextOrder, place, null, null, DEFAULT_STAY_MINUTES
-		);
+		TravelCourseStop stop = TravelCourseStop.create(plan, dayNumber, nextOrder, place);
 		TravelCourseStop saved = courseStopRepository.save(stop);
 
 		return AddCourseStopResponse.of(saved.getId(), dayNumber, nextOrder);
