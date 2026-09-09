@@ -3,10 +3,12 @@ package com.JJIN.domain.mission.controller.docs;
 import org.springframework.http.ResponseEntity;
 
 import com.JJIN.domain.mission.dto.request.MissionProofCommentCreateRequest;
+import com.JJIN.domain.mission.dto.request.PresignedUrlRequest;
 import com.JJIN.domain.mission.dto.response.MissionProofCommentCreateResponse;
 import com.JJIN.domain.mission.dto.response.MissionProofCommentListResponse;
 import com.JJIN.domain.mission.dto.response.MissionProofFeedResponse;
 import com.JJIN.domain.mission.dto.response.MissionProofLikeToggleResponse;
+import com.JJIN.domain.mission.dto.response.PresignedUrlResponse;
 import com.JJIN.domain.mission.entity.enums.MissionProofFeedTab;
 import com.JJIN.global.auth.annotation.CurrentMember;
 import com.JJIN.global.auth.dto.CurrentAuth;
@@ -17,11 +19,51 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
 @Tag(name = "Mission Proof", description = "미션 인증 피드 API")
 public interface MissionProofControllerDocs {
+
+	@Operation(
+		summary = "미션 인증 사진 업로드 Presigned URL 발급",
+		description = """
+			미션 인증 피드에 사용할 사진을 S3에 직접 PUT 업로드할 수 있는 Presigned URL을 발급한다.
+
+			- 지원 형식: image/jpeg, image/jpg, image/png, image/gif, image/webp
+			- URL 유효시간: 1시간
+			- 응답의 fileName은 실제 S3 객체 key이며, 인증 피드 생성 시 이미지 식별값으로 사용한다.
+			- 업로드 PUT 요청의 Content-Type은 발급 요청의 contentType과 동일해야 한다.
+			""",
+		security = @SecurityRequirement(name = "BearerAuth")
+	)
+	@ApiResponses({
+		@ApiResponse(
+			responseCode = "200",
+			description = "Presigned URL 발급 성공",
+			content = @Content(
+				mediaType = "application/json",
+				examples = @ExampleObject(value = """
+					{
+					  "status": 200,
+					  "message": "미션 인증 사진 업로드 URL을 생성했습니다.",
+					  "data": {
+					    "presignedUrl": "https://example-bucket.s3.ap-northeast-2.amazonaws.com/mission-proof/...",
+					    "fileName": "mission-proof/550e8400-e29b-41d4-a716-446655440000_proof.jpg"
+					  }
+					}
+					""")
+			)
+		),
+		@ApiResponse(responseCode = "400", description = "파일명 누락, contentType 누락 또는 지원하지 않는 이미지 형식"),
+		@ApiResponse(responseCode = "401", description = "인증 정보가 없거나 유효하지 않음"),
+		@ApiResponse(responseCode = "500", description = "Presigned URL 생성 실패")
+	})
+	ResponseEntity<SuccessResponse<PresignedUrlResponse>> createProofImagePresignedUrl(
+		@CurrentMember CurrentAuth currentAuth,
+		PresignedUrlRequest request
+	);
 
 	@Operation(
 		summary = "미션 인증 피드 조회",
