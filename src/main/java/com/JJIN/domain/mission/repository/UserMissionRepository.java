@@ -8,6 +8,7 @@ import java.util.Set;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -18,6 +19,11 @@ import com.JJIN.domain.mission.repository.dto.MissionMetricProjection;
 public interface UserMissionRepository extends JpaRepository<UserMission, Long> {
 
 	Optional<UserMission> findByTravelPlanIdAndMissionId(Long travelPlanId, Long missionId);
+
+	Optional<UserMission> findByIdAndTravelPlanId(Long id, Long travelPlanId);
+
+	@EntityGraph(attributePaths = "mission")
+	List<UserMission> findAllByTravelPlanIdOrderByAddedAtDescIdDesc(Long travelPlanId);
 
 	List<UserMission> findAllByMemberIdAndMissionId(Long memberId, Long missionId);
 
