@@ -9,6 +9,7 @@ import com.JJIN.global.auth.dto.CurrentAuth;
 import com.JJIN.global.response.dto.SuccessResponse;
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -96,5 +97,37 @@ public interface TravelPlanControllerDocs {
 	ResponseEntity<SuccessResponse<CreateTravelPlanResponse>> createTravelPlan(
 		CurrentAuth currentAuth,
 		CreateTravelPlanRequest request
+	);
+
+	@Operation(
+		summary = "여행 일정 삭제",
+		description = """
+			로그인한 회원이 소유한 여행 일정을 삭제한다.
+			일정의 취향 정보와 일정에 담긴 미션도 함께 삭제되며, 이미 작성된 미션 인증 피드는 보존한다.
+			존재하지 않거나 본인 소유가 아닌 일정은 동일하게 찾을 수 없음으로 처리한다.
+			""",
+		security = @SecurityRequirement(name = "BearerAuth")
+	)
+	@ApiResponses({
+		@ApiResponse(
+			responseCode = "200",
+			description = "여행 일정 삭제 성공",
+			content = @Content(
+				mediaType = "application/json",
+				examples = @ExampleObject(value = """
+					{
+					  "status": 200,
+					  "message": "여행 일정을 삭제했습니다.",
+					  "data": null
+					}
+					""")
+			)
+		),
+		@ApiResponse(responseCode = "401", description = "인증 정보가 없거나 유효하지 않음"),
+		@ApiResponse(responseCode = "404", description = "여행 일정을 찾을 수 없거나 본인 소유가 아님")
+	})
+	ResponseEntity<SuccessResponse<Void>> deleteTravelPlan(
+		CurrentAuth currentAuth,
+		@Parameter(description = "삭제할 여행 일정 ID", example = "1") Long travelPlanId
 	);
 }
