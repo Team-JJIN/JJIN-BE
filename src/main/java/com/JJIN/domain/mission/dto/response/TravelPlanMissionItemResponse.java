@@ -1,5 +1,7 @@
 package com.JJIN.domain.mission.dto.response;
 
+import java.util.List;
+
 import com.JJIN.domain.mission.entity.UserMission;
 import com.JJIN.domain.mission.entity.enums.MissionDifficulty;
 import com.JJIN.domain.mission.entity.enums.UserMissionStatus;
@@ -24,6 +26,9 @@ public record TravelPlanMissionItemResponse(
 	@Schema(description = "미션 이미지 URL", nullable = true)
 	String imageUrl,
 
+	@Schema(description = "미션 태그 목록", example = "[\"카페투어\", \"로컬맛집\"]")
+	List<String> tags,
+
 	@Schema(description = "미션 난이도", example = "ONE")
 	MissionDifficulty difficulty,
 
@@ -36,6 +41,7 @@ public record TravelPlanMissionItemResponse(
 
 	public static TravelPlanMissionItemResponse of(
 		final UserMission userMission,
+		final List<String> tags,
 		final Long missionProofId
 	) {
 		return new TravelPlanMissionItemResponse(
@@ -44,6 +50,7 @@ public record TravelPlanMissionItemResponse(
 			userMission.getMission().getTitle(),
 			userMission.getMission().getDescription(),
 			userMission.getMission().getImageUrl(),
+			tags,
 			userMission.getMission().getDifficulty(),
 			userMission.getStatus(),
 			missionProofId

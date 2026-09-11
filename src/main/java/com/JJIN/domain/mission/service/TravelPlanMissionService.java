@@ -1,5 +1,6 @@
 package com.JJIN.domain.mission.service;
 
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -14,6 +15,7 @@ import com.JJIN.domain.mission.entity.UserMission;
 import com.JJIN.domain.mission.entity.enums.UserMissionStatus;
 import com.JJIN.domain.mission.exception.MissionErrorCode;
 import com.JJIN.domain.mission.repository.MissionProofRepository;
+import com.JJIN.domain.mission.repository.MissionTagMappingRepository;
 import com.JJIN.domain.mission.repository.UserMissionRepository;
 import com.JJIN.domain.onboarding.entity.TravelPlan;
 import com.JJIN.domain.onboarding.repository.TravelPlanRepository;
@@ -28,6 +30,7 @@ public class TravelPlanMissionService {
 	private final TravelPlanRepository travelPlanRepository;
 	private final UserMissionRepository userMissionRepository;
 	private final MissionProofRepository missionProofRepository;
+	private final MissionTagMappingRepository missionTagMappingRepository;
 
 	@Transactional(readOnly = true)
 	public TravelPlanMissionListResponse getTravelPlanMissions(
@@ -43,11 +46,13 @@ public class TravelPlanMissionService {
 		long uploadPendingCount = countByStatus(userMissions, UserMissionStatus.UPLOAD_PENDING);
 		long completedCount = countByStatus(userMissions, UserMissionStatus.COMPLETED);
 		Map<Long, Long> latestProofIdByMissionId = getLatestProofIdByMissionId(memberId, userMissions);
+		Map<Long, List<String>> tagsByMissionId = getTagsByMissionId(userMissions);
 
 		List<TravelPlanMissionItemResponse> missions = userMissions.stream()
 			.filter(userMission -> status == null || userMission.getStatus() == status)
 			.map(userMission -> TravelPlanMissionItemResponse.of(
 				userMission,
+				tagsByMissionId.getOrDefault(userMission.getMission().getId(), List.of()),
 				userMission.getStatus() == UserMissionStatus.COMPLETED
 					? latestProofIdByMissionId.get(userMission.getMission().getId())
 					: null
@@ -75,6 +80,24 @@ public class TravelPlanMissionService {
 			.orElseThrow(() -> new JjinException(MissionErrorCode.USER_MISSION_NOT_FOUND));
 
 		userMissionRepository.delete(userMission);
+	}
+
+	private Map<Long, List<String>> getTagsByMissionId(final List<UserMission> userMissions) {
+		List<Long> missionIds = userMissions.stream()
+			.map(userMission -> userMission.getMission().getId())
+			.distinct()
+			.toList();
+
+		if (missionIds.isEmpty()) {
+			return Map.of();
+		}
+
+		return missionTagMappingRepository.findAllByMissionIdInWithTag(missionIds).stream()
+			.collect(Collectors.groupingBy(
+				mapping -> mapping.getMission().getId(),
+				LinkedHashMap::new,
+				Collectors.mapping(mapping -> mapping.getTag().getName(), Collectors.toList())
+			));
 	}
 
 	private Map<Long, Long> getLatestProofIdByMissionId(

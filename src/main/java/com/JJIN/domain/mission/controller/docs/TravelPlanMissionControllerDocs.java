@@ -26,6 +26,7 @@ public interface TravelPlanMissionControllerDocs {
 			status를 생략하면 전체 목록을, 전달하면 해당 상태의 목록만 반환한다.
 			지원 상태는 PROOF_REQUIRED(인증 필요), UPLOAD_PENDING(피드 업로드 대기), COMPLETED(완료)이다.
 			상태별 개수는 status 필터 여부와 무관하게 전체 일정 미션을 기준으로 반환한다.
+			각 미션의 태그 목록을 tags로 반환하며 태그가 없으면 빈 배열을 반환한다.
 			완료 미션은 해당 회원이 그 미션에 작성한 최신 인증글 ID를 missionProofId로 반환한다.
 			""",
 		security = @SecurityRequirement(name = "BearerAuth")
@@ -54,6 +55,7 @@ public interface TravelPlanMissionControllerDocs {
 					        "title": "아인슈페너 사먹기",
 					        "description": "시그니처 아인슈페너 주문하고 인증샷 남기기",
 					        "imageUrl": "https://cdn.example.com/mission/7.jpg",
+					        "tags": ["카페투어", "로컬맛집"],
 					        "difficulty": "ONE",
 					        "status": "PROOF_REQUIRED",
 					        "missionProofId": null
