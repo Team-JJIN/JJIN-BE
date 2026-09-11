@@ -1,5 +1,7 @@
 package com.JJIN.domain.mission.repository;
 
+import java.util.Collection;
+import java.util.List;
 import java.util.Optional;
 
 import org.springframework.data.domain.Pageable;
@@ -15,6 +17,11 @@ import com.JJIN.domain.mission.entity.MissionProof;
 import jakarta.persistence.LockModeType;
 
 public interface MissionProofRepository extends JpaRepository<MissionProof, Long> {
+
+	List<MissionProof> findAllByMemberIdAndMissionIdInOrderByCreatedAtDescIdDesc(
+		Long memberId,
+		Collection<Long> missionIds
+	);
 
 	@Lock(LockModeType.PESSIMISTIC_WRITE)
 	@Query("select mp from MissionProof mp where mp.id = :proofId")

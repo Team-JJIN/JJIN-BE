@@ -2,7 +2,9 @@ package com.JJIN.domain.travelplan.controller;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -59,6 +61,20 @@ public class TravelPlanController implements TravelPlanControllerDocs {
 				TravelPlanSuccessCode.TRAVEL_PLAN_CREATE_SUCCESS,
 				CreateTravelPlanResponse.of(travelPlanId)
 			)
+		);
+	}
+
+	@Override
+	@DeleteMapping("/{travelPlanId}")
+	public ResponseEntity<SuccessResponse<Void>> deleteTravelPlan(
+		@CurrentMember CurrentAuth currentAuth,
+		@PathVariable Long travelPlanId
+	) {
+		validateCurrentAuth(currentAuth);
+		travelPlanService.delete(currentAuth.memberId(), travelPlanId);
+
+		return ResponseEntity.ok(
+			SuccessResponse.of(TravelPlanSuccessCode.TRAVEL_PLAN_DELETE_SUCCESS, null)
 		);
 	}
 
