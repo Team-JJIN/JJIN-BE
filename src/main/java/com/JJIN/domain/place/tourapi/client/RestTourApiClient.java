@@ -85,13 +85,6 @@ public class RestTourApiClient implements TourApiClient {
 		TourApiPage<TourApiPlaceItem> page = get(locale, "detailCommon2", builder -> {
 			commonQuery(builder, 1, 1);
 			builder.queryParam("contentId", contentId);
-			builder.queryParam("defaultYN", "Y");
-			builder.queryParam("firstImageYN", "Y");
-			builder.queryParam("areacodeYN", "Y");
-			builder.queryParam("catcodeYN", "Y");
-			builder.queryParam("addrinfoYN", "Y");
-			builder.queryParam("mapinfoYN", "Y");
-			builder.queryParam("overviewYN", "Y");
 			return builder.build();
 		}, TourApiPlaceItem.class);
 		return page.items().stream().findFirst();
