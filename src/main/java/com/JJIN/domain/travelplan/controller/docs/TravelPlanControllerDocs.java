@@ -211,4 +211,37 @@ public interface TravelPlanControllerDocs {
 		@Parameter(description = "여행 일정 ID", example = "42") Long planId,
 		AddCourseStopRequest request
 	);
+
+	@Operation(
+		summary = "여행 코스 방문지 삭제",
+		description = """
+			코스에서 방문지 하나를 삭제한다.
+			같은 일차에서 삭제된 방문지 뒤의 순번(visit_order)은 한 칸씩 앞으로 당겨진다.
+			""",
+		security = @SecurityRequirement(name = "BearerAuth")
+	)
+	@ApiResponses({
+		@ApiResponse(
+			responseCode = "200",
+			description = "방문지 삭제 성공",
+			content = @Content(
+				mediaType = "application/json",
+				examples = @ExampleObject(value = """
+					{
+					  "status": 200,
+					  "message": "여행 코스에서 방문지를 삭제했습니다.",
+					  "data": null
+					}
+					""")
+			)
+		),
+		@ApiResponse(responseCode = "401", description = "인증 정보가 없거나 유효하지 않음"),
+		@ApiResponse(responseCode = "403", description = "본인의 여행 일정만 수정 가능"),
+		@ApiResponse(responseCode = "404", description = "여행 일정 또는 코스 방문지를 찾을 수 없음")
+	})
+	ResponseEntity<SuccessResponse<Void>> deleteCourseStop(
+		CurrentAuth currentAuth,
+		@Parameter(description = "여행 일정 ID", example = "42") Long planId,
+		@Parameter(description = "삭제할 코스 방문지 ID", example = "12") Long stopId
+	);
 }

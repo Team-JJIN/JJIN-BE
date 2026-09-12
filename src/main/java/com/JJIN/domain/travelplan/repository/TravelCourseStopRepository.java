@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
@@ -24,5 +25,20 @@ public interface TravelCourseStopRepository extends JpaRepository<TravelCourseSt
 	Optional<Integer> findMaxVisitOrder(
 		@Param("travelPlanId") Long travelPlanId,
 		@Param("dayNumber") int dayNumber
+	);
+
+	@Modifying
+	@Query(value = """
+		UPDATE travel_course_stop
+		SET visit_order = visit_order - 1
+		WHERE travel_plan_id = :travelPlanId
+		  AND day_number = :dayNumber
+		  AND visit_order > :deletedOrder
+		ORDER BY visit_order ASC
+		""", nativeQuery = true)
+	void shiftDownAfter(
+		@Param("travelPlanId") Long travelPlanId,
+		@Param("dayNumber") int dayNumber,
+		@Param("deletedOrder") int deletedOrder
 	);
 }

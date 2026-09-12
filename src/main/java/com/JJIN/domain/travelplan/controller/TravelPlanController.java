@@ -2,6 +2,7 @@ package com.JJIN.domain.travelplan.controller;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -102,6 +103,21 @@ public class TravelPlanController implements TravelPlanControllerDocs {
 			currentAuth.memberId(), planId, request);
 		return ResponseEntity.status(HttpStatus.CREATED).body(
 			SuccessResponse.of(TravelPlanSuccessCode.COURSE_STOP_ADD_SUCCESS, response)
+		);
+	}
+
+	@Override
+	@DeleteMapping("/{planId}/course/stops/{stopId}")
+	public ResponseEntity<SuccessResponse<Void>> deleteCourseStop(
+		@CurrentMember CurrentAuth currentAuth,
+		@PathVariable Long planId,
+		@PathVariable Long stopId
+	) {
+		validateCurrentAuth(currentAuth);
+
+		travelCourseService.deleteStop(currentAuth.memberId(), planId, stopId);
+		return ResponseEntity.ok(
+			SuccessResponse.of(TravelPlanSuccessCode.COURSE_STOP_DELETE_SUCCESS)
 		);
 	}
 

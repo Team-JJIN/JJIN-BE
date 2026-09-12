@@ -131,6 +131,30 @@ public class TravelCourseService {
 		return AddCourseStopResponse.of(saved.getId(), dayNumber, nextOrder);
 	}
 
+	/**
+	 * 코스에서 방문지 하나를 삭제하고, 같은 일차의 뒤 순번들을 한 칸씩 앞으로 당긴다.
+	 */
+	@Transactional
+	public void deleteStop(final Long memberId, final Long planId, final Long stopId) {
+		TravelPlan plan = travelPlanRepository.findById(planId)
+			.orElseThrow(() -> new JjinException(TravelPlanErrorCode.TRAVEL_PLAN_NOT_FOUND));
+
+		if (!plan.getMember().getId().equals(memberId)) {
+			throw new JjinException(TravelPlanErrorCode.TRAVEL_PLAN_FORBIDDEN);
+		}
+
+		TravelCourseStop stop = courseStopRepository.findById(stopId)
+			.filter(found -> found.getTravelPlan().getId().equals(planId))
+			.orElseThrow(() -> new JjinException(TravelPlanErrorCode.COURSE_STOP_NOT_FOUND));
+
+		int dayNumber = stop.getDayNumber();
+		int deletedOrder = stop.getVisitOrder();
+
+		courseStopRepository.delete(stop);
+		courseStopRepository.flush();
+		courseStopRepository.shiftDownAfter(planId, dayNumber, deletedOrder);
+	}
+
 	private List<CourseStopResponse> buildStopResponses(
 		final List<TravelCourseStop> stops,
 		final PlaceLocale locale
