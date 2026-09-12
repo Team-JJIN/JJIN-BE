@@ -36,7 +36,8 @@ public class TourApiCandidatePoolProvider implements CandidatePoolProvider {
 		try {
 			List<PlaceCandidate> koreanCandidates = fetchAndSync(PlaceLocale.KO, query);
 
-			if (query.displayLocale() != PlaceLocale.KO) {
+			if (query.displayLocale() != PlaceLocale.KO
+				&& query.contentType().supports(query.displayLocale())) {
 				try {
 					fetchAndSync(query.displayLocale(), query);
 				} catch (TourApiClientException exception) {
