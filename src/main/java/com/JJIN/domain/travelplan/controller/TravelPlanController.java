@@ -4,6 +4,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -16,6 +17,7 @@ import com.JJIN.domain.place.entity.enums.PlaceLocale;
 import com.JJIN.domain.travelplan.controller.docs.TravelPlanControllerDocs;
 import com.JJIN.domain.travelplan.dto.request.AddCourseStopRequest;
 import com.JJIN.domain.travelplan.dto.request.CreateTravelPlanRequest;
+import com.JJIN.domain.travelplan.dto.request.ReorderCourseStopsRequest;
 import com.JJIN.domain.travelplan.dto.response.AddCourseStopResponse;
 import com.JJIN.domain.travelplan.dto.response.CreateTravelPlanResponse;
 import com.JJIN.domain.travelplan.dto.response.TravelCourseDayResponse;
@@ -103,6 +105,21 @@ public class TravelPlanController implements TravelPlanControllerDocs {
 			currentAuth.memberId(), planId, request);
 		return ResponseEntity.status(HttpStatus.CREATED).body(
 			SuccessResponse.of(TravelPlanSuccessCode.COURSE_STOP_ADD_SUCCESS, response)
+		);
+	}
+
+	@Override
+	@PatchMapping("/{planId}/course/stops/order")
+	public ResponseEntity<SuccessResponse<Void>> reorderCourseStops(
+		@CurrentMember CurrentAuth currentAuth,
+		@PathVariable Long planId,
+		@Valid @RequestBody ReorderCourseStopsRequest request
+	) {
+		validateCurrentAuth(currentAuth);
+
+		travelCourseService.reorderStops(currentAuth.memberId(), planId, request);
+		return ResponseEntity.ok(
+			SuccessResponse.of(TravelPlanSuccessCode.COURSE_STOP_REORDER_SUCCESS)
 		);
 	}
 

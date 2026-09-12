@@ -23,6 +23,8 @@ public enum TravelPlanErrorCode implements BaseCode {
 	INVALID_DAY_NUMBER(HttpStatus.BAD_REQUEST, "여행 기간 범위를 벗어난 일차입니다."),
 	PLACE_NOT_FOUND(HttpStatus.NOT_FOUND, "요청한 장소를 찾을 수 없습니다."),
 	COURSE_STOP_NOT_FOUND(HttpStatus.NOT_FOUND, "코스 방문지를 찾을 수 없습니다."),
+	INVALID_STOP_ORDER(HttpStatus.BAD_REQUEST,
+		"순번 요청이 올바르지 않습니다. 같은 일차의 모든 방문지를 1..N 순번으로 빠짐없이 포함해야 합니다."),
 	;
 
 	private final HttpStatus httpStatus;

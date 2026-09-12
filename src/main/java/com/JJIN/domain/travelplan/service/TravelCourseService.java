@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -27,6 +28,7 @@ import com.JJIN.domain.place.repository.PlaceRepository;
 import com.JJIN.domain.place.schedule.OpenStatusCalculator;
 import com.JJIN.domain.place.schedule.WeeklySchedule;
 import com.JJIN.domain.travelplan.dto.request.AddCourseStopRequest;
+import com.JJIN.domain.travelplan.dto.request.ReorderCourseStopsRequest;
 import com.JJIN.domain.travelplan.dto.response.AddCourseStopResponse;
 import com.JJIN.domain.travelplan.dto.response.CourseStopResponse;
 import com.JJIN.domain.travelplan.dto.response.TravelCourseDayResponse;
@@ -49,6 +51,7 @@ import tools.jackson.databind.ObjectMapper;
 public class TravelCourseService {
 
 	private static final double EARTH_RADIUS_METERS = 6_371_000.0;
+	private static final int REORDER_OFFSET = 1_000;
 
 	private final TravelPlanRepository travelPlanRepository;
 	private final TravelCourseStopRepository courseStopRepository;
@@ -153,6 +156,60 @@ public class TravelCourseService {
 		courseStopRepository.delete(stop);
 		courseStopRepository.flush();
 		courseStopRepository.shiftDownAfter(planId, dayNumber, deletedOrder);
+	}
+
+	/**
+	 * 같은 일차 방문지들의 순번을 입력값으로 일괄 수정한다.
+	 */
+	@Transactional
+	public void reorderStops(
+		final Long memberId,
+		final Long planId,
+		final ReorderCourseStopsRequest request
+	) {
+		TravelPlan plan = travelPlanRepository.findById(planId)
+			.orElseThrow(() -> new JjinException(TravelPlanErrorCode.TRAVEL_PLAN_NOT_FOUND));
+
+		if (!plan.getMember().getId().equals(memberId)) {
+			throw new JjinException(TravelPlanErrorCode.TRAVEL_PLAN_FORBIDDEN);
+		}
+
+		List<Long> requestedIds = request.orders().stream()
+			.map(ReorderCourseStopsRequest.StopOrder::stopId)
+			.toList();
+		List<TravelCourseStop> stops = courseStopRepository.findAllById(requestedIds);
+		if (stops.size() != requestedIds.size()) {
+			throw new JjinException(TravelPlanErrorCode.COURSE_STOP_NOT_FOUND);
+		}
+		if (stops.stream().anyMatch(stop -> !stop.getTravelPlan().getId().equals(planId))) {
+			throw new JjinException(TravelPlanErrorCode.COURSE_STOP_NOT_FOUND);
+		}
+
+		int dayNumber = stops.get(0).getDayNumber();
+		if (stops.stream().anyMatch(stop -> stop.getDayNumber() != dayNumber)) {
+			throw new JjinException(TravelPlanErrorCode.INVALID_STOP_ORDER);
+		}
+
+		List<TravelCourseStop> allDayStops = courseStopRepository
+			.findAllByTravelPlanIdAndDayNumberOrderByVisitOrderAsc(planId, dayNumber);
+		if (allDayStops.size() != request.orders().size()) {
+			throw new JjinException(TravelPlanErrorCode.INVALID_STOP_ORDER);
+		}
+
+		Set<Integer> orders = request.orders().stream()
+			.map(ReorderCourseStopsRequest.StopOrder::visitOrder)
+			.collect(Collectors.toSet());
+		boolean isPermutation = orders.size() == request.orders().size()
+			&& orders.stream().min(Integer::compareTo).orElse(0) == 1
+			&& orders.stream().max(Integer::compareTo).orElse(0) == request.orders().size();
+		if (!isPermutation) {
+			throw new JjinException(TravelPlanErrorCode.INVALID_STOP_ORDER);
+		}
+
+		courseStopRepository.offsetVisitOrders(planId, dayNumber, REORDER_OFFSET);
+		for (ReorderCourseStopsRequest.StopOrder order : request.orders()) {
+			courseStopRepository.updateVisitOrder(order.stopId(), order.visitOrder());
+		}
 	}
 
 	private List<CourseStopResponse> buildStopResponses(

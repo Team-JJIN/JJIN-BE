@@ -5,6 +5,7 @@ import org.springframework.http.ResponseEntity;
 import com.JJIN.domain.place.entity.enums.PlaceLocale;
 import com.JJIN.domain.travelplan.dto.request.AddCourseStopRequest;
 import com.JJIN.domain.travelplan.dto.request.CreateTravelPlanRequest;
+import com.JJIN.domain.travelplan.dto.request.ReorderCourseStopsRequest;
 import com.JJIN.domain.travelplan.dto.response.AddCourseStopResponse;
 import com.JJIN.domain.travelplan.dto.response.CreateTravelPlanResponse;
 import com.JJIN.domain.travelplan.dto.response.TravelCourseDayResponse;
@@ -210,6 +211,40 @@ public interface TravelPlanControllerDocs {
 		CurrentAuth currentAuth,
 		@Parameter(description = "여행 일정 ID", example = "42") Long planId,
 		AddCourseStopRequest request
+	);
+
+	@Operation(
+		summary = "여행 코스 방문지 순번 일괄 수정",
+		description = """
+			같은 일차 방문지들의 순번을 (stopId, visitOrder) 쌍 목록으로 일괄 수정한다.
+			요청은 그 일차의 모든 방문지를 빠짐없이 포함해야 하며, visitOrder는 1..N 순열이어야 한다.
+			""",
+		security = @SecurityRequirement(name = "BearerAuth")
+	)
+	@ApiResponses({
+		@ApiResponse(
+			responseCode = "200",
+			description = "순번 수정 성공",
+			content = @Content(
+				mediaType = "application/json",
+				examples = @ExampleObject(value = """
+					{
+					  "status": 200,
+					  "message": "여행 코스 방문지 순번을 수정했습니다.",
+					  "data": null
+					}
+					""")
+			)
+		),
+		@ApiResponse(responseCode = "400", description = "순번 요청이 순열 조건을 만족하지 않음"),
+		@ApiResponse(responseCode = "401", description = "인증 정보가 없거나 유효하지 않음"),
+		@ApiResponse(responseCode = "403", description = "본인의 여행 일정만 수정 가능"),
+		@ApiResponse(responseCode = "404", description = "여행 일정 또는 코스 방문지를 찾을 수 없음")
+	})
+	ResponseEntity<SuccessResponse<Void>> reorderCourseStops(
+		CurrentAuth currentAuth,
+		@Parameter(description = "여행 일정 ID", example = "42") Long planId,
+		ReorderCourseStopsRequest request
 	);
 
 	@Operation(

@@ -30,6 +30,28 @@ public interface TravelCourseStopRepository extends JpaRepository<TravelCourseSt
 	@Modifying
 	@Query(value = """
 		UPDATE travel_course_stop
+		SET visit_order = visit_order + :offset
+		WHERE travel_plan_id = :travelPlanId
+		  AND day_number = :dayNumber
+		ORDER BY visit_order DESC
+		""", nativeQuery = true)
+	void offsetVisitOrders(
+		@Param("travelPlanId") Long travelPlanId,
+		@Param("dayNumber") int dayNumber,
+		@Param("offset") int offset
+	);
+
+	@Modifying
+	@Query(value = """
+		UPDATE travel_course_stop
+		SET visit_order = :visitOrder
+		WHERE id = :stopId
+		""", nativeQuery = true)
+	void updateVisitOrder(@Param("stopId") Long stopId, @Param("visitOrder") int visitOrder);
+
+	@Modifying
+	@Query(value = """
+		UPDATE travel_course_stop
 		SET visit_order = visit_order - 1
 		WHERE travel_plan_id = :travelPlanId
 		  AND day_number = :dayNumber
