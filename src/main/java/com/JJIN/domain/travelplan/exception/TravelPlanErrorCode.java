@@ -18,6 +18,13 @@ public enum TravelPlanErrorCode implements BaseCode {
 	MISSING_SUBCATEGORY(HttpStatus.BAD_REQUEST, "선택한 TourAPI 관광타입에는 세부 취향이 최소 1개 있어야 합니다."),
 	INVALID_SUBCATEGORY(HttpStatus.BAD_REQUEST, "TourAPI 관광타입과 세부 취향 선택이 올바르지 않습니다."),
 	INVALID_ALL_FOOD_SELECTION(HttpStatus.BAD_REQUEST, "'다 좋아요'는 다른 음식점 세부 취향과 함께 선택할 수 없습니다."),
+	TRAVEL_PLAN_NOT_FOUND(HttpStatus.NOT_FOUND, "여행 일정을 찾을 수 없습니다."),
+	TRAVEL_PLAN_FORBIDDEN(HttpStatus.FORBIDDEN, "본인의 여행 일정만 조회할 수 있습니다."),
+	INVALID_DAY_NUMBER(HttpStatus.BAD_REQUEST, "여행 기간 범위를 벗어난 일차입니다."),
+	PLACE_NOT_FOUND(HttpStatus.NOT_FOUND, "요청한 장소를 찾을 수 없습니다."),
+	COURSE_STOP_NOT_FOUND(HttpStatus.NOT_FOUND, "코스 방문지를 찾을 수 없습니다."),
+	INVALID_STOP_ORDER(HttpStatus.BAD_REQUEST,
+		"순번 요청이 올바르지 않습니다. 같은 일차의 모든 방문지를 1..N 순번으로 빠짐없이 포함해야 합니다."),
 	;
 
 	private final HttpStatus httpStatus;

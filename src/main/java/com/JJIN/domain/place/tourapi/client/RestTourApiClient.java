@@ -21,6 +21,7 @@ import com.JJIN.domain.place.tourapi.dto.TourApiPlaceItem;
 import com.JJIN.domain.place.tourapi.exception.TourApiClientException;
 import com.JJIN.domain.place.tourapi.query.AreaPlaceQuery;
 import com.JJIN.domain.place.tourapi.query.FestivalQuery;
+import com.JJIN.domain.place.tourapi.query.KeywordSearchQuery;
 import tools.jackson.databind.JsonNode;
 
 import lombok.extern.slf4j.Slf4j;
@@ -73,6 +74,19 @@ public class RestTourApiClient implements TourApiClient {
 			builder.queryParam("eventStartDate", BASIC_DATE.format(query.startDate()));
 			builder.queryParam("eventEndDate", BASIC_DATE.format(query.endDate()));
 			queryParamIfPresent(builder, "lDongRegnCd", query.legalDongRegionCode());
+			return builder.build();
+		}, TourApiPlaceItem.class);
+	}
+
+	@Override
+	public TourApiPage<TourApiPlaceItem> searchPlaces(
+		final PlaceLocale locale,
+		final KeywordSearchQuery query
+	) {
+		return get(locale, "searchKeyword2", builder -> {
+			commonQuery(builder, query.page(), query.size());
+			builder.queryParam("arrange", "A");
+			builder.queryParam("keyword", query.keyword());
 			return builder.build();
 		}, TourApiPlaceItem.class);
 	}
