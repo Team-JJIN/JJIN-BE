@@ -14,7 +14,6 @@ import org.springframework.util.StringUtils;
 
 import com.JJIN.domain.place.candidate.PlaceCandidate;
 import com.JJIN.domain.place.entity.PlaceOperatingInfo;
-import com.JJIN.domain.place.entity.enums.OpenStatus;
 import com.JJIN.domain.place.entity.enums.PlaceLocale;
 import com.JJIN.domain.place.exception.PlaceErrorCode;
 import com.JJIN.domain.place.repository.PlaceOperatingInfoRepository;
@@ -103,7 +102,7 @@ public class PlaceSearchService {
 		final BigDecimal userLatitude,
 		final BigDecimal userLongitude
 	) {
-		OpenStatus openStatus = openStatusResolver.resolve(operating, now);
+		PlaceOpenStatusResolver.DailyOpenInfo openInfo = openStatusResolver.resolve(operating, now);
 		Integer distance = hasUserLocation
 			? haversineMeters(userLatitude, userLongitude, candidate.latitude(), candidate.longitude())
 			: null;
@@ -116,8 +115,9 @@ public class PlaceSearchService {
 			candidate.latitude(),
 			candidate.longitude(),
 			candidate.representativeImageUrl(),
-			operating != null ? operating.getRawOpeningHoursText() : null,
-			openStatus,
+			openInfo.openTime(),
+			openInfo.closeTime(),
+			openInfo.status(),
 			distance
 		);
 	}

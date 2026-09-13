@@ -55,7 +55,8 @@ public interface PlaceSearchControllerDocs {
 					        "latitude": 37.57861,
 					        "longitude": 126.97723,
 					        "representativeImageUrl": "https://...",
-					        "openingHoursText": "09:00~18:00 (입장마감 17:00)",
+					        "openTime": "09:00",
+					        "closeTime": "18:00",
 					        "openStatus": "OPEN",
 					        "distanceMeters": 180
 					      }
