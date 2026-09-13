@@ -20,13 +20,11 @@ import com.JJIN.domain.place.entity.Place;
 import com.JJIN.domain.place.entity.PlaceLocalizedContent;
 import com.JJIN.domain.place.entity.PlaceOperatingInfo;
 import com.JJIN.domain.place.entity.enums.OpenStatus;
-import com.JJIN.domain.place.entity.enums.OperatingInfoParseStatus;
 import com.JJIN.domain.place.entity.enums.PlaceLocale;
 import com.JJIN.domain.place.repository.PlaceLocalizedContentRepository;
 import com.JJIN.domain.place.repository.PlaceOperatingInfoRepository;
 import com.JJIN.domain.place.repository.PlaceRepository;
-import com.JJIN.domain.place.schedule.OpenStatusCalculator;
-import com.JJIN.domain.place.schedule.WeeklySchedule;
+import com.JJIN.domain.place.schedule.PlaceOpenStatusResolver;
 import com.JJIN.domain.travelplan.dto.request.AddCourseStopRequest;
 import com.JJIN.domain.travelplan.dto.request.ReorderCourseStopsRequest;
 import com.JJIN.domain.travelplan.dto.response.AddCourseStopResponse;
@@ -39,8 +37,6 @@ import com.JJIN.global.exception.JjinException;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import tools.jackson.core.JacksonException;
-import tools.jackson.databind.ObjectMapper;
 
 /**
  * 여행 코스(방문지) 조회·편집 서비스.
@@ -58,8 +54,7 @@ public class TravelCourseService {
 	private final PlaceRepository placeRepository;
 	private final PlaceLocalizedContentRepository localizedContentRepository;
 	private final PlaceOperatingInfoRepository operatingInfoRepository;
-	private final OpenStatusCalculator openStatusCalculator;
-	private final ObjectMapper objectMapper;
+	private final PlaceOpenStatusResolver openStatusResolver;
 	private final Clock clock;
 
 	/**
@@ -241,7 +236,7 @@ public class TravelCourseService {
 			PlaceLocalizedContent localized = localizedByPlaceId.get(place.getId());
 			PlaceOperatingInfo operating = operatingByPlaceId.get(place.getId());
 			Integer distance = previous == null ? null : haversineMeters(previous, place);
-			OpenStatus openStatus = computeOpenStatus(operating, now);
+			OpenStatus openStatus = openStatusResolver.resolve(operating, now);
 
 			responses.add(new CourseStopResponse(
 				stop.getId(),
@@ -278,23 +273,6 @@ public class TravelCourseService {
 		localizedContentRepository.findAllByPlaceIdInAndVisibleTrue(placeIds)
 			.forEach(content -> result.putIfAbsent(content.getPlace().getId(), content));
 		return result;
-	}
-
-	private OpenStatus computeOpenStatus(final PlaceOperatingInfo operating, final LocalDateTime now) {
-		if (operating == null
-			|| operating.getParseStatus() == OperatingInfoParseStatus.NOT_PARSED
-			|| operating.getParseStatus() == OperatingInfoParseStatus.FAILED
-			|| operating.getWeeklyScheduleJson() == null) {
-			return OpenStatus.UNKNOWN;
-		}
-		try {
-			WeeklySchedule schedule = objectMapper.readValue(
-				operating.getWeeklyScheduleJson(), WeeklySchedule.class);
-			return openStatusCalculator.compute(schedule, now);
-		} catch (JacksonException exception) {
-			log.warn("weeklyScheduleJson 역직렬화 실패: placeId={}", operating.getPlaceId(), exception);
-			return OpenStatus.UNKNOWN;
-		}
 	}
 
 	private Integer haversineMeters(final Place from, final Place to) {
