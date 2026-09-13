@@ -6,6 +6,7 @@ import java.time.LocalDateTime;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -14,7 +15,6 @@ import org.springframework.util.StringUtils;
 
 import com.JJIN.domain.place.candidate.PlaceCandidate;
 import com.JJIN.domain.place.entity.PlaceOperatingInfo;
-import com.JJIN.domain.place.entity.enums.OpenStatus;
 import com.JJIN.domain.place.entity.enums.PlaceLocale;
 import com.JJIN.domain.place.exception.PlaceErrorCode;
 import com.JJIN.domain.place.repository.PlaceOperatingInfoRepository;
@@ -25,6 +25,7 @@ import com.JJIN.domain.place.tourapi.dto.TourApiPlaceItem;
 import com.JJIN.domain.place.tourapi.query.KeywordSearchQuery;
 import com.JJIN.domain.place.tourapi.service.PlaceSyncService;
 import com.JJIN.domain.place.tourapi.service.TourApiPlaceDetailService;
+import com.JJIN.domain.travelplan.repository.TravelCourseStopRepository;
 import com.JJIN.global.exception.JjinException;
 
 import lombok.RequiredArgsConstructor;
@@ -46,6 +47,7 @@ public class PlaceSearchService {
 	private final PlaceSyncService placeSyncService;
 	private final TourApiPlaceDetailService placeDetailService;
 	private final PlaceOperatingInfoRepository operatingInfoRepository;
+	private final TravelCourseStopRepository courseStopRepository;
 	private final PlaceOpenStatusResolver openStatusResolver;
 	private final Clock clock;
 
@@ -55,7 +57,8 @@ public class PlaceSearchService {
 		final int page,
 		final int size,
 		final BigDecimal userLatitude,
-		final BigDecimal userLongitude
+		final BigDecimal userLongitude,
+		final Long planId
 	) {
 		if (!StringUtils.hasText(keyword)) {
 			throw new JjinException(PlaceErrorCode.INVALID_SEARCH_KEYWORD);
@@ -71,13 +74,18 @@ public class PlaceSearchService {
 			.findAllByPlaceIdIn(synced.stream().map(PlaceCandidate::placeId).toList()).stream()
 			.collect(Collectors.toMap(PlaceOperatingInfo::getPlaceId, Function.identity(), (a, b) -> a));
 
+		Set<Long> addedPlaceIds = planId == null
+			? Set.of()
+			: Set.copyOf(courseStopRepository.findPlaceIdsByTravelPlanId(planId));
+
 		LocalDateTime now = LocalDateTime.now(clock);
 		boolean hasUserLocation = userLatitude != null && userLongitude != null;
 
 		List<PlaceSearchResponse.SearchedPlace> places = synced.stream()
 			.map(candidate -> toSearchedPlace(
 				candidate, operatingByPlaceId.get(candidate.placeId()),
-				now, hasUserLocation, userLatitude, userLongitude))
+				now, hasUserLocation, userLatitude, userLongitude,
+				addedPlaceIds.contains(candidate.placeId())))
 			.sorted(hasUserLocation
 				? Comparator.comparing(PlaceSearchResponse.SearchedPlace::distanceMeters,
 					Comparator.nullsLast(Comparator.naturalOrder()))
@@ -101,9 +109,10 @@ public class PlaceSearchService {
 		final LocalDateTime now,
 		final boolean hasUserLocation,
 		final BigDecimal userLatitude,
-		final BigDecimal userLongitude
+		final BigDecimal userLongitude,
+		final boolean alreadyAdded
 	) {
-		OpenStatus openStatus = openStatusResolver.resolve(operating, now);
+		PlaceOpenStatusResolver.DailyOpenInfo openInfo = openStatusResolver.resolve(operating, now);
 		Integer distance = hasUserLocation
 			? haversineMeters(userLatitude, userLongitude, candidate.latitude(), candidate.longitude())
 			: null;
@@ -116,9 +125,11 @@ public class PlaceSearchService {
 			candidate.latitude(),
 			candidate.longitude(),
 			candidate.representativeImageUrl(),
-			operating != null ? operating.getRawOpeningHoursText() : null,
-			openStatus,
-			distance
+			openInfo.openTime(),
+			openInfo.closeTime(),
+			openInfo.status(),
+			distance,
+			alreadyAdded
 		);
 	}
 

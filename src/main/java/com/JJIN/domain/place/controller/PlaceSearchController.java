@@ -37,7 +37,8 @@ public class PlaceSearchController implements PlaceSearchControllerDocs {
 		@RequestParam(name = "page", defaultValue = "1") int page,
 		@RequestParam(name = "size", defaultValue = "10") int size,
 		@RequestParam(name = "latitude", required = false) BigDecimal latitude,
-		@RequestParam(name = "longitude", required = false) BigDecimal longitude
+		@RequestParam(name = "longitude", required = false) BigDecimal longitude,
+		@RequestParam(name = "planId", required = false) Long planId
 	) {
 		if (currentAuth == null) {
 			throw new JjinException(TokenErrorCode.INVALID_AUTHORIZATION_HEADER);
@@ -46,7 +47,7 @@ public class PlaceSearchController implements PlaceSearchControllerDocs {
 		return ResponseEntity.ok(
 			SuccessResponse.of(
 				PlaceSuccessCode.PLACE_SEARCH_SUCCESS,
-				placeSearchService.search(keyword, locale, page, size, latitude, longitude)
+				placeSearchService.search(keyword, locale, page, size, latitude, longitude, planId)
 			)
 		);
 	}

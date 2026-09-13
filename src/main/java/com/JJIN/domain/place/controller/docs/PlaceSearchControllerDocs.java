@@ -29,6 +29,7 @@ public interface PlaceSearchControllerDocs {
 			반환된 placeId를 코스 방문지 추가 API에 바로 사용할 수 있다.
 			latitude/longitude(브라우저 Geolocation)를 함께 보내면 각 장소까지의 직선거리(m)가 포함되고
 			가까운 순으로 정렬된다. 미제공 시 거리 필드는 null이며 TourAPI 기본(가나다) 정렬을 따른다.
+			planId를 함께 보내면 해당 일정 코스에 이미 포함된 장소는 alreadyAdded=true로 표시된다.
 			""",
 		security = @SecurityRequirement(name = "BearerAuth")
 	)
@@ -55,9 +56,11 @@ public interface PlaceSearchControllerDocs {
 					        "latitude": 37.57861,
 					        "longitude": 126.97723,
 					        "representativeImageUrl": "https://...",
-					        "openingHoursText": "09:00~18:00 (입장마감 17:00)",
+					        "openTime": "09:00",
+					        "closeTime": "18:00",
 					        "openStatus": "OPEN",
-					        "distanceMeters": 180
+					        "distanceMeters": 180,
+					        "alreadyAdded": false
 					      }
 					    ]
 					  }
@@ -75,6 +78,7 @@ public interface PlaceSearchControllerDocs {
 		@Parameter(description = "페이지 번호. 기본값 1", example = "1") int page,
 		@Parameter(description = "페이지 크기. 기본값 10", example = "10") int size,
 		@Parameter(description = "사용자 위도 (브라우저 Geolocation). 선택", example = "37.5765") BigDecimal latitude,
-		@Parameter(description = "사용자 경도 (브라우저 Geolocation). 선택", example = "126.9769") BigDecimal longitude
+		@Parameter(description = "사용자 경도 (브라우저 Geolocation). 선택", example = "126.9769") BigDecimal longitude,
+		@Parameter(description = "일정 id. 주면 해당 일정에 이미 추가된 장소는 alreadyAdded=true. 선택", example = "42") Long planId
 	);
 }

@@ -19,7 +19,6 @@ import com.JJIN.domain.onboarding.repository.TravelPlanRepository;
 import com.JJIN.domain.place.entity.Place;
 import com.JJIN.domain.place.entity.PlaceLocalizedContent;
 import com.JJIN.domain.place.entity.PlaceOperatingInfo;
-import com.JJIN.domain.place.entity.enums.OpenStatus;
 import com.JJIN.domain.place.entity.enums.PlaceLocale;
 import com.JJIN.domain.place.repository.PlaceLocalizedContentRepository;
 import com.JJIN.domain.place.repository.PlaceOperatingInfoRepository;
@@ -236,7 +235,7 @@ public class TravelCourseService {
 			PlaceLocalizedContent localized = localizedByPlaceId.get(place.getId());
 			PlaceOperatingInfo operating = operatingByPlaceId.get(place.getId());
 			Integer distance = previous == null ? null : haversineMeters(previous, place);
-			OpenStatus openStatus = openStatusResolver.resolve(operating, now);
+			PlaceOpenStatusResolver.DailyOpenInfo openInfo = openStatusResolver.resolve(operating, now);
 
 			responses.add(new CourseStopResponse(
 				stop.getId(),
@@ -247,8 +246,9 @@ public class TravelCourseService {
 				localized != null ? localized.getAddress() : null,
 				place.getLatitude(),
 				place.getLongitude(),
-				operating != null ? operating.getRawOpeningHoursText() : null,
-				openStatus,
+				openInfo.openTime(),
+				openInfo.closeTime(),
+				openInfo.status(),
 				distance
 			));
 			previous = place;

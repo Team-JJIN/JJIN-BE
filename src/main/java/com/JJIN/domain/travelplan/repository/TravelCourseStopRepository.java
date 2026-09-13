@@ -17,6 +17,9 @@ public interface TravelCourseStopRepository extends JpaRepository<TravelCourseSt
 		int dayNumber
 	);
 
+	@Query("select s.place.id from TravelCourseStop s where s.travelPlan.id = :travelPlanId")
+	List<Long> findPlaceIdsByTravelPlanId(@Param("travelPlanId") Long travelPlanId);
+
 	@Query("""
 		select max(s.visitOrder)
 		from TravelCourseStop s

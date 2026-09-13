@@ -20,9 +20,11 @@ public record PlaceSearchResponse(
 ) {
 
 	/**
-	 * @param openingHoursText     TourAPI 원문 운영시간 (미보강 시 null)
-	 * @param openStatus           요청 시각 기준 운영 상태
-	 * @param distanceMeters       사용자 좌표로부터의 직선거리(m). 좌표 미제공 시 null.
+	 * @param openTime       오늘의 영업 시작 시각 "HH:mm" (휴무·미상은 null)
+	 * @param closeTime      오늘의 영업 종료 시각 "HH:mm" (휴무·미상은 null)
+	 * @param openStatus     요청 시각 기준 운영 상태
+	 * @param distanceMeters 사용자 좌표로부터의 직선거리(m). 좌표 미제공 시 null.
+	 * @param alreadyAdded   요청 planId의 코스에 이미 포함된 장소인지. planId 미제공 시 항상 false.
 	 */
 	public record SearchedPlace(
 		Long placeId,
@@ -32,9 +34,11 @@ public record PlaceSearchResponse(
 		BigDecimal latitude,
 		BigDecimal longitude,
 		String representativeImageUrl,
-		String openingHoursText,
+		String openTime,
+		String closeTime,
 		OpenStatus openStatus,
-		Integer distanceMeters
+		Integer distanceMeters,
+		boolean alreadyAdded
 	) {
 	}
 }

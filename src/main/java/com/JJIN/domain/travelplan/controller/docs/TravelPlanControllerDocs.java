@@ -141,7 +141,8 @@ public interface TravelPlanControllerDocs {
 					        "address": "인천광역시 미추홀구 소성로 40",
 					        "latitude": 37.4562,
 					        "longitude": 126.6543,
-					        "openingHoursText": "09:00~19:00",
+					        "openTime": "09:00",
+					        "closeTime": "19:00",
 					        "openStatus": "OPEN",
 					        "distanceFromPreviousMeters": null
 					      },
@@ -154,7 +155,8 @@ public interface TravelPlanControllerDocs {
 					        "address": "인천광역시 미추홀구 소성로 40",
 					        "latitude": 37.4583,
 					        "longitude": 126.6551,
-					        "openingHoursText": "09:00~19:00",
+					        "openTime": "09:00",
+					        "closeTime": "19:00",
 					        "openStatus": "OPEN",
 					        "distanceFromPreviousMeters": 230
 					      }
