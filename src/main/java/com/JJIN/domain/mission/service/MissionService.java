@@ -60,7 +60,7 @@ public class MissionService {
 	private static final int MAX_PAGE_SIZE = 50;
 	private static final String MISSION_IMAGE_PREFIX = "mission/";
 	private static final Set<String> ALLOWED_IMAGE_CONTENT_TYPES = Set.of(
-		"image/jpeg", "image/jpg", "image/png", "image/gif", "image/webp"
+		"image/jpeg", "image/jpg", "image/png", "image/gif", "image/webp", "image/heic"
 	);
 
 	private final MissionRepository missionRepository;

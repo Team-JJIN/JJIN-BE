@@ -6,6 +6,7 @@ import org.springframework.transaction.annotation.Transactional;
 import com.JJIN.domain.member.entity.Member;
 import com.JJIN.domain.member.exception.MemberErrorCode;
 import com.JJIN.domain.member.repository.MemberRepository;
+import com.JJIN.domain.mission.repository.UserMissionRepository;
 import com.JJIN.domain.onboarding.entity.TravelPlan;
 import com.JJIN.domain.onboarding.entity.TravelRegion;
 import com.JJIN.domain.onboarding.entity.enums.TravelSubcategory;
@@ -14,6 +15,7 @@ import com.JJIN.domain.onboarding.repository.TravelRegionRepository;
 import com.JJIN.domain.travelplan.dto.internal.CreateTravelPlanCommand;
 import com.JJIN.domain.travelplan.dto.response.TravelPlanListResponse;
 import com.JJIN.domain.travelplan.exception.TravelPlanErrorCode;
+import com.JJIN.domain.travelplan.repository.TravelCourseStopRepository;
 import com.JJIN.domain.travelplan.validator.TravelPlanRequestValidator;
 import com.JJIN.global.exception.JjinException;
 
@@ -28,6 +30,8 @@ public class TravelPlanService {
 	private final MemberRepository memberRepository;
 	private final TravelPlanRepository travelPlanRepository;
 	private final TravelRegionRepository travelRegionRepository;
+	private final UserMissionRepository userMissionRepository;
+	private final TravelCourseStopRepository travelCourseStopRepository;
 	private final TravelPlanRequestValidator travelPlanRequestValidator;
 
 	@Transactional
@@ -66,6 +70,17 @@ public class TravelPlanService {
 		return TravelPlanListResponse.from(
 			travelPlanRepository.findByMemberIdOrderByCreatedAtDesc(memberId)
 		);
+	}
+
+	@Transactional
+	public void delete(final Long memberId, final Long travelPlanId) {
+		TravelPlan travelPlan = travelPlanRepository.findByIdAndMemberId(travelPlanId, memberId)
+			.orElseThrow(() -> new JjinException(TravelPlanErrorCode.TRAVEL_PLAN_NOT_FOUND));
+
+		userMissionRepository.deleteAllByTravelPlanId(travelPlanId);
+		travelCourseStopRepository.deleteAllByTravelPlanId(travelPlanId);
+		travelPlanRepository.delete(travelPlan);
+		log.info("여행 일정 삭제 완료: memberId={}, travelPlanId={}", memberId, travelPlanId);
 	}
 
 	private TravelRegion resolveRegion(final CreateTravelPlanCommand command) {

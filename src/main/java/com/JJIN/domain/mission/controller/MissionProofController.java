@@ -11,10 +11,12 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.JJIN.domain.mission.controller.docs.MissionProofControllerDocs;
 import com.JJIN.domain.mission.dto.request.MissionProofCommentCreateRequest;
+import com.JJIN.domain.mission.dto.request.PresignedUrlRequest;
 import com.JJIN.domain.mission.dto.response.MissionProofCommentCreateResponse;
 import com.JJIN.domain.mission.dto.response.MissionProofCommentListResponse;
 import com.JJIN.domain.mission.dto.response.MissionProofFeedResponse;
 import com.JJIN.domain.mission.dto.response.MissionProofLikeToggleResponse;
+import com.JJIN.domain.mission.dto.response.PresignedUrlResponse;
 import com.JJIN.domain.mission.entity.enums.MissionProofFeedTab;
 import com.JJIN.domain.mission.exception.MissionSuccessCode;
 import com.JJIN.domain.mission.service.MissionProofService;
@@ -25,6 +27,7 @@ import com.JJIN.global.auth.jwt.exception.TokenErrorCode;
 import com.JJIN.global.exception.JjinException;
 import com.JJIN.global.response.dto.SuccessResponse;
 
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
 @RestController
@@ -34,6 +37,23 @@ public class MissionProofController implements MissionProofControllerDocs {
 
 	private final MissionProofService missionProofService;
 	private final MissionProofCommentService missionProofCommentService;
+
+	@Override
+	@PostMapping("/presigned-url")
+	public ResponseEntity<SuccessResponse<PresignedUrlResponse>> createProofImagePresignedUrl(
+		@CurrentMember CurrentAuth currentAuth,
+		@Valid @RequestBody PresignedUrlRequest request
+	) {
+		if (currentAuth == null) {
+			throw new JjinException(TokenErrorCode.INVALID_AUTHORIZATION_HEADER);
+		}
+		PresignedUrlResponse response = missionProofService.createProofImagePresignedUrl(
+			request.fileName(),
+			request.contentType()
+		);
+		return ResponseEntity.ok(
+			SuccessResponse.of(MissionSuccessCode.MISSION_PROOF_PRESIGNED_URL_SUCCESS, response));
+	}
 
 	@Override
 	@GetMapping("/feed")

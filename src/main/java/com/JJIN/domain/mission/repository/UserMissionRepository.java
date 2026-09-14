@@ -8,18 +8,39 @@ import java.util.Set;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Lock;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import com.JJIN.domain.mission.entity.UserMission;
 import com.JJIN.domain.mission.repository.dto.MissionMetricProjection;
 
+import jakarta.persistence.LockModeType;
+
 public interface UserMissionRepository extends JpaRepository<UserMission, Long> {
 
 	Optional<UserMission> findByTravelPlanIdAndMissionId(Long travelPlanId, Long missionId);
 
+	Optional<UserMission> findByIdAndTravelPlanId(Long id, Long travelPlanId);
+
+	@Lock(LockModeType.PESSIMISTIC_WRITE)
+	@Query("select um from UserMission um where um.id = :id and um.travelPlan.id = :travelPlanId")
+	Optional<UserMission> findByIdAndTravelPlanIdForUpdate(
+		@Param("id") Long id,
+		@Param("travelPlanId") Long travelPlanId
+	);
+
+	@EntityGraph(attributePaths = "mission")
+	List<UserMission> findAllByTravelPlanIdOrderByAddedAtDescIdDesc(Long travelPlanId);
+
 	List<UserMission> findAllByMemberIdAndMissionId(Long memberId, Long missionId);
+
+	@Modifying(flushAutomatically = true)
+	@Query("delete from UserMission um where um.travelPlan.id = :travelPlanId")
+	void deleteAllByTravelPlanId(@Param("travelPlanId") Long travelPlanId);
 
 	@Query("select distinct um.mission.id from UserMission um where um.member.id = :memberId")
 	List<Long> findDistinctMissionIdsByMemberId(@Param("memberId") Long memberId);

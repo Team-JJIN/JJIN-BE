@@ -12,6 +12,11 @@ import com.JJIN.domain.travelplan.entity.TravelCourseStop;
 
 public interface TravelCourseStopRepository extends JpaRepository<TravelCourseStop, Long> {
 
+	/** 코스 재생성 시 기존 방문지를 모두 지운다. */
+	@Modifying
+	@Query("delete from TravelCourseStop s where s.travelPlan.id = :travelPlanId")
+	void deleteAllByTravelPlanId(@Param("travelPlanId") Long travelPlanId);
+
 	List<TravelCourseStop> findAllByTravelPlanIdAndDayNumberOrderByVisitOrderAsc(
 		Long travelPlanId,
 		int dayNumber
@@ -19,9 +24,6 @@ public interface TravelCourseStopRepository extends JpaRepository<TravelCourseSt
 
 	@Query("select s.place.id from TravelCourseStop s where s.travelPlan.id = :travelPlanId")
 	List<Long> findPlaceIdsByTravelPlanId(@Param("travelPlanId") Long travelPlanId);
-
-	/** 코스 재생성 시 기존 방문지를 모두 지운다. */
-	void deleteAllByTravelPlanId(Long travelPlanId);
 
 	@Query("""
 		select max(s.visitOrder)
