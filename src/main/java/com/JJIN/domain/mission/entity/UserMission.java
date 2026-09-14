@@ -3,7 +3,9 @@ package com.JJIN.domain.mission.entity;
 import com.JJIN.domain.member.entity.Member;
 import com.JJIN.domain.mission.entity.converter.UserMissionStatusConverter;
 import com.JJIN.domain.mission.entity.enums.UserMissionStatus;
+import com.JJIN.domain.mission.exception.MissionErrorCode;
 import com.JJIN.domain.onboarding.entity.TravelPlan;
+import com.JJIN.global.exception.JjinException;
 
 import java.time.LocalDateTime;
 
@@ -74,6 +76,12 @@ public class UserMission {
 	@Column
 	private LocalDateTime completedAt;
 
+	@Column(name = "proof_image_key", length = 2048)
+	private String proofImageKey;
+
+	@Column(name = "authenticated_at")
+	private LocalDateTime authenticatedAt;
+
 	public static UserMission add(
 		final Member member,
 		final Mission mission,
@@ -89,6 +97,21 @@ public class UserMission {
 
 	public void markUploadPending() {
 		this.status = UserMissionStatus.UPLOAD_PENDING;
+	}
+
+	/**
+	 * 사진 인증 결과를 보관하며 동일한 사진으로 재시도하면 기존 결과를 유지한다.
+	 */
+	public void authenticate(final String proofImageKey, final LocalDateTime authenticatedAt) {
+		if (status == UserMissionStatus.UPLOAD_PENDING && proofImageKey.equals(this.proofImageKey)) {
+			return;
+		}
+		if (status != UserMissionStatus.PROOF_REQUIRED) {
+			throw new JjinException(MissionErrorCode.USER_MISSION_AUTHENTICATION_CONFLICT);
+		}
+		this.proofImageKey = proofImageKey;
+		this.authenticatedAt = authenticatedAt;
+		markUploadPending();
 	}
 
 	public void complete() {

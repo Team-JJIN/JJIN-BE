@@ -34,6 +34,11 @@ public enum MissionErrorCode implements BaseCode {
 	TRAVEL_PLAN_NOT_FOUND(HttpStatus.NOT_FOUND, "여행 일정을 찾을 수 없습니다."),
 
 	/*
+	409 CONFLICT
+	 */
+	USER_MISSION_AUTHENTICATION_CONFLICT(HttpStatus.CONFLICT, "이미 인증된 일정 미션입니다."),
+
+	/*
 	500 INTERNAL SERVER ERROR
 	 */
 	PRESIGNED_URL_GENERATION_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "Presigned URL 생성에 실패했습니다."),

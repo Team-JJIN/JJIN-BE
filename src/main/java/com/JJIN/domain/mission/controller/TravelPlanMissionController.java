@@ -4,11 +4,15 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.JJIN.domain.mission.controller.docs.TravelPlanMissionControllerDocs;
+import com.JJIN.domain.mission.dto.request.TravelPlanMissionAuthenticateRequest;
+import com.JJIN.domain.mission.dto.response.TravelPlanMissionAuthenticationResponse;
 import com.JJIN.domain.mission.dto.response.TravelPlanMissionListResponse;
 import com.JJIN.domain.mission.entity.enums.UserMissionStatus;
 import com.JJIN.domain.mission.exception.MissionSuccessCode;
@@ -19,6 +23,7 @@ import com.JJIN.global.auth.jwt.exception.TokenErrorCode;
 import com.JJIN.global.exception.JjinException;
 import com.JJIN.global.response.dto.SuccessResponse;
 
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
 @RestController
@@ -27,6 +32,39 @@ import lombok.RequiredArgsConstructor;
 public class TravelPlanMissionController implements TravelPlanMissionControllerDocs {
 
 	private final TravelPlanMissionService travelPlanMissionService;
+
+	@Override
+	@PostMapping("/{userMissionId}/authenticate")
+	public ResponseEntity<SuccessResponse<TravelPlanMissionAuthenticationResponse>> authenticateTravelPlanMission(
+		@CurrentMember CurrentAuth currentAuth,
+		@PathVariable Long travelPlanId,
+		@PathVariable Long userMissionId,
+		@Valid @RequestBody TravelPlanMissionAuthenticateRequest request
+	) {
+		validateCurrentAuth(currentAuth);
+		return ResponseEntity.ok(SuccessResponse.of(
+			MissionSuccessCode.TRAVEL_PLAN_MISSION_AUTHENTICATE_SUCCESS,
+			travelPlanMissionService.authenticateTravelPlanMission(
+				currentAuth.memberId(), travelPlanId, userMissionId, request.proofImageKey()
+			)
+		));
+	}
+
+	@Override
+	@GetMapping("/{userMissionId}/authentication")
+	public ResponseEntity<SuccessResponse<TravelPlanMissionAuthenticationResponse>> getTravelPlanMissionAuthentication(
+		@CurrentMember CurrentAuth currentAuth,
+		@PathVariable Long travelPlanId,
+		@PathVariable Long userMissionId
+	) {
+		validateCurrentAuth(currentAuth);
+		return ResponseEntity.ok(SuccessResponse.of(
+			MissionSuccessCode.TRAVEL_PLAN_MISSION_AUTHENTICATION_GET_SUCCESS,
+			travelPlanMissionService.getTravelPlanMissionAuthentication(
+				currentAuth.memberId(), travelPlanId, userMissionId
+			)
+		));
+	}
 
 	@Override
 	@GetMapping

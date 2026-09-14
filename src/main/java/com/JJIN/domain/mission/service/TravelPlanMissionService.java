@@ -1,5 +1,7 @@
 package com.JJIN.domain.mission.service;
 
+import java.time.Clock;
+import java.time.LocalDateTime;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -8,6 +10,7 @@ import java.util.stream.Collectors;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.JJIN.domain.mission.dto.response.TravelPlanMissionAuthenticationResponse;
 import com.JJIN.domain.mission.dto.response.TravelPlanMissionItemResponse;
 import com.JJIN.domain.mission.dto.response.TravelPlanMissionListResponse;
 import com.JJIN.domain.mission.entity.MissionProof;
@@ -20,6 +23,7 @@ import com.JJIN.domain.mission.repository.UserMissionRepository;
 import com.JJIN.domain.onboarding.entity.TravelPlan;
 import com.JJIN.domain.onboarding.repository.TravelPlanRepository;
 import com.JJIN.global.exception.JjinException;
+import com.JJIN.global.s3.S3PresignedUrlService;
 
 import lombok.RequiredArgsConstructor;
 
@@ -31,6 +35,46 @@ public class TravelPlanMissionService {
 	private final UserMissionRepository userMissionRepository;
 	private final MissionProofRepository missionProofRepository;
 	private final MissionTagMappingRepository missionTagMappingRepository;
+	private final Clock clock;
+	private final S3PresignedUrlService s3PresignedUrlService;
+
+	@Transactional
+	public TravelPlanMissionAuthenticationResponse authenticateTravelPlanMission(
+		final Long memberId,
+		final Long travelPlanId,
+		final Long userMissionId,
+		final String proofImageKey
+	) {
+		getOwnedTravelPlan(memberId, travelPlanId);
+		UserMission userMission = userMissionRepository
+			.findByIdAndTravelPlanIdForUpdate(userMissionId, travelPlanId)
+			.orElseThrow(() -> new JjinException(MissionErrorCode.USER_MISSION_NOT_FOUND));
+		userMission.authenticate(proofImageKey, LocalDateTime.now(clock));
+		return toAuthenticationResponse(userMission);
+	}
+
+	@Transactional(readOnly = true)
+	public TravelPlanMissionAuthenticationResponse getTravelPlanMissionAuthentication(
+		final Long memberId,
+		final Long travelPlanId,
+		final Long userMissionId
+	) {
+		getOwnedTravelPlan(memberId, travelPlanId);
+		UserMission userMission = userMissionRepository.findByIdAndTravelPlanId(userMissionId, travelPlanId)
+			.orElseThrow(() -> new JjinException(MissionErrorCode.USER_MISSION_NOT_FOUND));
+		return toAuthenticationResponse(userMission);
+	}
+
+	private TravelPlanMissionAuthenticationResponse toAuthenticationResponse(final UserMission userMission) {
+		String proofImageKey = userMission.getProofImageKey();
+		String proofImageUrl = proofImageKey == null
+			? null
+			: s3PresignedUrlService.generateGetPresignedUrl(proofImageKey);
+		return TravelPlanMissionAuthenticationResponse.of(
+			userMission,
+			proofImageUrl
+		);
+	}
 
 	@Transactional(readOnly = true)
 	public TravelPlanMissionListResponse getTravelPlanMissions(
