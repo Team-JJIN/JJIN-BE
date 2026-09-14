@@ -14,6 +14,7 @@ import com.JJIN.domain.place.tourapi.dto.TourApiPage;
 import com.JJIN.domain.place.tourapi.dto.TourApiPlaceItem;
 import com.JJIN.domain.place.tourapi.query.AreaPlaceQuery;
 import com.JJIN.domain.place.tourapi.query.FestivalQuery;
+import com.JJIN.domain.place.tourapi.query.KeywordSearchQuery;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -43,6 +44,14 @@ public class CachedTourApiGateway {
 	) {
 		String key = festivalKey(locale, query);
 		return findOrFetchPage(key, () -> tourApiClient.getFestivals(locale, query));
+	}
+
+	public TourApiPage<TourApiPlaceItem> searchPlaces(
+		final PlaceLocale locale,
+		final KeywordSearchQuery query
+	) {
+		String key = searchKey(locale, query);
+		return findOrFetchPage(key, () -> tourApiClient.searchPlaces(locale, query));
 	}
 
 	public Optional<TourApiPlaceItem> getCommonDetail(
@@ -134,6 +143,16 @@ public class CachedTourApiGateway {
 			value(query.legalDongRegionCode()),
 			query.startDate().toString(),
 			query.endDate().toString(),
+			String.valueOf(query.page()),
+			String.valueOf(query.size())
+		);
+	}
+
+	private String searchKey(final PlaceLocale locale, final KeywordSearchQuery query) {
+		return String.join(":",
+			CACHE_PREFIX + "search",
+			locale.name(),
+			query.keyword(),
 			String.valueOf(query.page()),
 			String.valueOf(query.size())
 		);

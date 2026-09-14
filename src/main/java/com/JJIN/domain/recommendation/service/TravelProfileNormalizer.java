@@ -6,8 +6,10 @@ import java.time.temporal.ChronoUnit;
 import org.springframework.stereotype.Component;
 
 import com.JJIN.domain.onboarding.entity.TravelPlan;
+import com.JJIN.domain.onboarding.entity.enums.TourApiContentType;
 import com.JJIN.domain.recommendation.dto.TravelProfile;
 import com.JJIN.domain.recommendation.policy.LocalityPolicy;
+import com.JJIN.domain.recommendation.policy.StayDurationPolicy;
 import com.JJIN.domain.recommendation.policy.TransportPolicy;
 
 /**
@@ -17,7 +19,7 @@ import com.JJIN.domain.recommendation.policy.TransportPolicy;
 @Component
 public class TravelProfileNormalizer {
 
-	private static final int AVG_STAY_MINUTES = 90;
+	private static final int DEFAULT_AVG_STAY_MINUTES = 90;
 	private static final int MIN_SLOTS = 3;
 	private static final int MAX_SLOTS = 7;
 	private static final int MIN_DISTRICTS = 3;
@@ -30,7 +32,8 @@ public class TravelProfileNormalizer {
 		int availableMinutes = (int) Duration.between(
 			plan.getActivityStartTime(), plan.getActivityEndTime()).toMinutes();
 
-		int slotCount = calculateSlotCount(availableMinutes, transport.avgTravelMinutes());
+		int avgStayMinutes = averagePreferredStayMinutes(plan);
+		int slotCount = calculateSlotCount(availableMinutes, avgStayMinutes, transport.avgTravelMinutes());
 		int requiredDistricts = Math.max(MIN_DISTRICTS, tripDays * transport.districtMultiplier());
 
 		return new TravelProfile(
@@ -52,9 +55,31 @@ public class TravelProfileNormalizer {
 		);
 	}
 
-	private int calculateSlotCount(final int availableMinutes, final int avgTravelMinutes) {
-		int avgSlotCost = AVG_STAY_MINUTES + avgTravelMinutes;
+	private int calculateSlotCount(
+		final int availableMinutes,
+		final int avgStayMinutes,
+		final int avgTravelMinutes
+	) {
+		int avgSlotCost = avgStayMinutes + avgTravelMinutes;
 		int raw = avgSlotCost <= 0 ? MIN_SLOTS : (int) Math.floor((double) availableMinutes / avgSlotCost);
 		return Math.max(MIN_SLOTS, Math.min(MAX_SLOTS, raw));
+	}
+
+	/**
+	 * 사용자 선호 콘텐츠 유형들의 평균 체류시간(분)을 슬롯 비용 산정에 사용한다.
+	 * 체류시간이 0인 유형(숙박 등)은 제외하며, 선호 정보가 없으면 기본값(90분)으로 근사한다.
+	 */
+	private int averagePreferredStayMinutes(final TravelPlan plan) {
+		int sum = 0;
+		int count = 0;
+		for (var preference : plan.getPreferences()) {
+			TourApiContentType contentType = preference.getContentType();
+			int stay = StayDurationPolicy.estimatedStayMinutes(contentType);
+			if (stay > 0) {
+				sum += stay;
+				count++;
+			}
+		}
+		return count == 0 ? DEFAULT_AVG_STAY_MINUTES : sum / count;
 	}
 }

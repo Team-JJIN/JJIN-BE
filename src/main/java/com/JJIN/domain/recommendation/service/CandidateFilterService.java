@@ -5,6 +5,7 @@ import java.util.List;
 
 import org.springframework.stereotype.Service;
 
+import com.JJIN.domain.place.schedule.OpenStatusCalculator;
 import com.JJIN.domain.recommendation.dto.RecommendationCandidate;
 import com.JJIN.domain.recommendation.dto.TravelProfile;
 import com.JJIN.global.geo.GeoPoint;

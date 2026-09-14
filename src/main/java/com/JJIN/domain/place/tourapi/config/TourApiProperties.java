@@ -40,7 +40,8 @@ public record TourApiProperties(
 		@DefaultValue("24h") Duration cacheTtl,
 		@DefaultValue("5000") int pageSize,
 		@DefaultValue("10") int maxPages,
-		@DefaultValue("30") int lookbackDays
+		@DefaultValue("30") int lookbackDays,
+		@DefaultValue("6") int maxLookbackWindows
 	) {
 	}
 

@@ -24,6 +24,12 @@ public class TourApiResponseParser {
 			throw new TourApiClientException("TourAPI 응답이 비어 있습니다.");
 		}
 
+		if (root.path("response").isMissingNode() && !root.path("resultCode").isMissingNode()) {
+			throw new TourApiClientException(
+				root.path("resultCode").asText(),
+				"TourAPI 오류: " + root.path("resultMsg").asText());
+		}
+
 		JsonNode response = root.path("response");
 		JsonNode header = response.path("header");
 		String resultCode = header.path("resultCode").asText();

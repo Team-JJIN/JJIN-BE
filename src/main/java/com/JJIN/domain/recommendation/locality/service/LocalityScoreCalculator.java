@@ -63,6 +63,31 @@ public class LocalityScoreCalculator {
 		return combine(places, districtBaselines, perPlaceModifiers);
 	}
 
+	/**
+	 * 지정 지역(regionCode 2자리) 내 시군구별 현지인 비율(localRatio)을 반환한다.
+	 * 시군구 선정(로컬도 레벨에 맞는 지역 고르기)에 사용한다.
+	 *
+	 * @return district(3자리) → localRatio [0.0, 1.0]
+	 */
+	public Map<String, Double> districtLocalRatios(final String regionCode) {
+		if (regionCode == null || regionCode.isBlank()) {
+			return Map.of();
+		}
+		Map<String, DistrictConcentration> nationwide = refreshNationwide();
+		if (nationwide.isEmpty()) {
+			return Map.of();
+		}
+		nationwide.forEach((code, snap) -> cache.save(snap, properties.visitorStats().cacheTtl()));
+
+		Map<String, Double> result = new HashMap<>();
+		nationwide.forEach((signgu, snap) -> {
+			if (signgu.startsWith(regionCode) && signgu.length() > regionCode.length() && !snap.isEmpty()) {
+				result.put(signgu.substring(regionCode.length()), snap.localRatio());
+			}
+		});
+		return result;
+	}
+
 	/** 단일 장소의 로컬도. 시군구 코드가 없으면 중립값(0.5)을 반환한다. */
 	public double resolveScore(final Place place) {
 		String districtCode = place.getLegalDongDistrictCode();
@@ -73,19 +98,19 @@ public class LocalityScoreCalculator {
 	}
 
 	private Map<String, DistrictConcentration> loadDistrictBaselines(final List<Place> places) {
-		Set<String> requiredDistricts = new HashSet<>();
+		Set<String> requiredSigngu = new HashSet<>();
 		for (Place place : places) {
-			String code = place.getLegalDongDistrictCode();
-			if (code != null && !code.isBlank()) {
-				requiredDistricts.add(code);
+			String signgu = signguCodeOf(place);
+			if (signgu != null) {
+				requiredSigngu.add(signgu);
 			}
 		}
 
 		Map<String, DistrictConcentration> snapshots = new HashMap<>();
-		for (String code : requiredDistricts) {
+		for (String code : requiredSigngu) {
 			cache.find(code).ifPresent(snap -> snapshots.put(code, snap));
 		}
-		if (snapshots.keySet().containsAll(requiredDistricts)) {
+		if (snapshots.keySet().containsAll(requiredSigngu)) {
 			return snapshots;
 		}
 
@@ -98,17 +123,43 @@ public class LocalityScoreCalculator {
 		return snapshots;
 	}
 
-	private Map<String, DistrictConcentration> refreshNationwide() {
-		LocalDate today = LocalDate.now(clock);
-		LocalDate end = today.minusDays(1);
-		LocalDate start = end.minusDays(Math.max(1, properties.visitorStats().lookbackDays()) - 1L);
-
-		try {
-			return concentrationApiClient.loadDistrictSnapshots(start, end);
-		} catch (ConcentrationApiException exception) {
-			log.warn("전국 방문자수 배치 fetch 실패, baseline 미확보: msg={}", exception.getMessage());
-			return Map.of();
+	/** Place의 region(2) + district(3)를 방문자수 API 스냅샷 키(5자리 signguCode)로 결합한다. */
+	private String signguCodeOf(final Place place) {
+		String region = place.getLegalDongRegionCode();
+		String district = place.getLegalDongDistrictCode();
+		if (region == null || region.isBlank() || district == null || district.isBlank()) {
+			return null;
 		}
+		return region + district;
+	}
+
+	private Map<String, DistrictConcentration> refreshNationwide() {
+		int windowDays = Math.max(1, properties.visitorStats().lookbackDays());
+		int maxWindows = Math.max(1, properties.visitorStats().maxLookbackWindows());
+		LocalDate cursorEnd = LocalDate.now(clock).minusDays(1);
+
+		// 방문자수 API는 데이터 반영이 수개월 지연될 수 있어, 데이터가 나올 때까지
+		// 창을 과거로 밀며 재시도한다(지연 폭에 자동 적응). 키는 5자리 signguCode.
+		for (int attempt = 0; attempt < maxWindows; attempt++) {
+			LocalDate end = cursorEnd;
+			LocalDate start = end.minusDays(windowDays - 1L);
+			try {
+				Map<String, DistrictConcentration> snapshot =
+					concentrationApiClient.loadDistrictSnapshots(start, end);
+				if (!snapshot.isEmpty()) {
+					if (attempt > 0) {
+						log.info("방문자수 데이터 확보: {}~{} (과거로 {}창 이동)", start, end, attempt);
+					}
+					return snapshot;
+				}
+			} catch (ConcentrationApiException exception) {
+				log.warn("전국 방문자수 배치 fetch 실패: window={}~{}, msg={}", start, end, exception.getMessage());
+				return Map.of();
+			}
+			cursorEnd = start.minusDays(1);
+		}
+		log.warn("방문자수 데이터를 최근 {}개 창에서 찾지 못함, baseline 미확보", maxWindows);
+		return Map.of();
 	}
 
 	/**
@@ -158,20 +209,22 @@ public class LocalityScoreCalculator {
 	}
 
 	private Map<String, Double> loadAttractionMap(final DistrictKey key) {
-		Optional<Map<String, Double>> cached = cache.findAttractions(key.regionCode(), key.districtCode());
+		// 관광지 집중률 API의 signguCd는 5자리(regionCode 2 + district 3)를 요구한다.
+		String signguCd = key.regionCode() + key.districtCode();
+		Optional<Map<String, Double>> cached = cache.findAttractions(key.regionCode(), signguCd);
 		if (cached.isPresent()) {
 			return cached.get();
 		}
 		try {
 			Map<String, Double> fetched = attractionConcentrationApiClient
-				.loadAttractionConcentrations(key.regionCode(), key.districtCode());
+				.loadAttractionConcentrations(key.regionCode(), signguCd);
 			cache.saveAttractions(
-				key.regionCode(), key.districtCode(), fetched,
+				key.regionCode(), signguCd, fetched,
 				properties.attractionConcentration().cacheTtl());
 			return fetched;
 		} catch (ConcentrationApiException exception) {
-			log.warn("관광지 집중률 조회 실패, modifier 건너뜀: region={}, district={}, msg={}",
-				key.regionCode(), key.districtCode(), exception.getMessage());
+			log.warn("관광지 집중률 조회 실패, modifier 건너뜀: region={}, signgu={}, msg={}",
+				key.regionCode(), signguCd, exception.getMessage());
 			return Map.of();
 		}
 	}
@@ -184,12 +237,12 @@ public class LocalityScoreCalculator {
 		double baselineWeight = clamp01(properties.attractionConcentration().baselineWeight());
 		Map<Long, Double> result = new HashMap<>();
 		for (Place place : places) {
-			String districtCode = place.getLegalDongDistrictCode();
-			if (districtCode == null || districtCode.isBlank()) {
+			String signgu = signguCodeOf(place);
+			if (signgu == null) {
 				result.put(place.getId(), NEUTRAL_SCORE);
 				continue;
 			}
-			DistrictConcentration snap = baselines.get(districtCode);
+			DistrictConcentration snap = baselines.get(signgu);
 			double baseline = snap == null || snap.isEmpty()
 				? NEUTRAL_SCORE : clamp01(snap.localRatio());
 

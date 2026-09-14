@@ -27,9 +27,10 @@ public record LocalityPolicy(
 	private static final Map<ExperienceLevel, LocalityPolicy> POLICIES = new EnumMap<>(ExperienceLevel.class);
 
 	static {
-		POLICIES.put(ExperienceLevel.LIGHT, new LocalityPolicy(0.20, 0.40, 0.30, 0.30));
-		POLICIES.put(ExperienceLevel.NORMAL, new LocalityPolicy(0.55, 0.35, 0.40, 0.25));
-		POLICIES.put(ExperienceLevel.DEEP, new LocalityPolicy(0.85, 0.30, 0.50, 0.20));
+		// 취향 일치도(categoryWeight)에 더 큰 비중을 둔다. 각 레벨 가중치 합은 1.0 유지.
+		POLICIES.put(ExperienceLevel.LIGHT, new LocalityPolicy(0.20, 0.50, 0.25, 0.25));
+		POLICIES.put(ExperienceLevel.NORMAL, new LocalityPolicy(0.55, 0.50, 0.30, 0.20));
+		POLICIES.put(ExperienceLevel.DEEP, new LocalityPolicy(0.85, 0.45, 0.40, 0.15));
 	}
 
 	public static LocalityPolicy of(final ExperienceLevel level) {

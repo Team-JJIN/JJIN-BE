@@ -28,13 +28,16 @@ public class TourApiPlaceDetailService {
 			.orElseThrow(() -> new IllegalArgumentException("장소를 찾을 수 없습니다: " + placeId))
 			.getContentType();
 		PlaceLocalizedContent identifier = findIdentifier(placeId, locale);
+		PlaceLocale sourceLocale = identifier.getLocale();
 
 		tourApiGateway
-			.getCommonDetail(locale, identifier.getExternalContentId())
-			.ifPresent(item -> placeSyncService.syncPlace(locale, item));
-		tourApiGateway
-			.getIntroDetail(locale, identifier.getExternalContentId(), contentType)
-			.ifPresent(intro -> placeSyncService.syncIntro(placeId, contentType, intro));
+			.getCommonDetail(sourceLocale, identifier.getExternalContentId())
+			.ifPresent(item -> placeSyncService.syncPlace(sourceLocale, item));
+		if (contentType.supports(sourceLocale)) {
+			tourApiGateway
+				.getIntroDetail(sourceLocale, identifier.getExternalContentId(), contentType)
+				.ifPresent(intro -> placeSyncService.syncIntro(placeId, contentType, intro));
+		}
 	}
 
 	private PlaceLocalizedContent findIdentifier(final Long placeId, final PlaceLocale locale) {

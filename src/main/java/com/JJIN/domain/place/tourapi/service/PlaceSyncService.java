@@ -18,19 +18,25 @@ import com.JJIN.domain.place.candidate.PlaceCandidate;
 import com.JJIN.domain.place.entity.Place;
 import com.JJIN.domain.place.entity.PlaceLocalizedContent;
 import com.JJIN.domain.place.entity.PlaceOperatingInfo;
+import com.JJIN.domain.place.entity.enums.OperatingInfoParseStatus;
 import com.JJIN.domain.place.entity.enums.PlaceLocale;
 import com.JJIN.domain.place.repository.PlaceLocalizedContentRepository;
 import com.JJIN.domain.place.repository.PlaceOperatingInfoRepository;
 import com.JJIN.domain.place.repository.PlaceRepository;
+import com.JJIN.domain.place.schedule.ParsedSchedule;
+import com.JJIN.domain.place.schedule.WeeklyScheduleParser;
 import com.JJIN.domain.place.tourapi.dto.TourApiIntroItem;
 import com.JJIN.domain.place.tourapi.dto.TourApiPlaceItem;
 
 import lombok.RequiredArgsConstructor;
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.ObjectMapper;
 
 @Service
 @RequiredArgsConstructor
 public class PlaceSyncService {
 
+	private static final String PARSER_VERSION = "rule-based/v1";
 	private static final DateTimeFormatter TOUR_API_DATE_TIME =
 		DateTimeFormatter.ofPattern("yyyyMMddHHmmss");
 	private static final DateTimeFormatter TOUR_API_DATE = DateTimeFormatter.BASIC_ISO_DATE;
@@ -38,6 +44,8 @@ public class PlaceSyncService {
 	private final PlaceRepository placeRepository;
 	private final PlaceLocalizedContentRepository localizedContentRepository;
 	private final PlaceOperatingInfoRepository operatingInfoRepository;
+	private final WeeklyScheduleParser weeklyScheduleParser;
+	private final ObjectMapper objectMapper;
 
 	@Transactional
 	public List<PlaceCandidate> syncPlaces(
@@ -168,6 +176,14 @@ public class PlaceSyncService {
 			if (operatingInfo.getPlaceId() != null) {
 				operatingInfo.updateRawInformation(openingHours, restDay);
 			}
+
+			ParsedSchedule parsed = weeklyScheduleParser.parse(openingHours, restDay);
+			if (parsed.status() != OperatingInfoParseStatus.FAILED && parsed.schedule() != null) {
+				serializeSchedule(parsed).ifPresent(json ->
+					operatingInfo.updateParsedSchedule(json, parsed.status(), PARSER_VERSION, LocalDateTime.now())
+				);
+			}
+
 			operatingInfoRepository.save(operatingInfo);
 		}
 
@@ -178,6 +194,14 @@ public class PlaceSyncService {
 				prefer(intro.playtime(), place.getFestivalTimeText()),
 				prefer(intro.eventplace(), place.getFestivalPlace())
 			);
+		}
+	}
+
+	private Optional<String> serializeSchedule(final ParsedSchedule parsed) {
+		try {
+			return Optional.of(objectMapper.writeValueAsString(parsed.schedule()));
+		} catch (JacksonException exception) {
+			return Optional.empty();
 		}
 	}
 

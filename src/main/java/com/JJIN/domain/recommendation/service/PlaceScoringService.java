@@ -3,13 +3,16 @@ package com.JJIN.domain.recommendation.service;
 import java.time.LocalDate;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
 
-import com.JJIN.domain.place.dto.WeeklySchedule;
+import com.JJIN.domain.onboarding.entity.enums.TourApiContentType;
 import com.JJIN.domain.place.entity.enums.OperatingInfoParseStatus;
+import com.JJIN.domain.place.schedule.OpenStatusCalculator;
+import com.JJIN.domain.place.schedule.WeeklySchedule;
 import com.JJIN.domain.recommendation.dto.RecommendationCandidate;
 import com.JJIN.domain.recommendation.dto.ScoredCandidate;
 import com.JJIN.domain.recommendation.dto.TravelProfile;
@@ -75,6 +78,24 @@ public class PlaceScoringService {
 			.flatMap(group -> group.stream()
 				.sorted(Comparator.comparingDouble(ScoredCandidate::finalScore).reversed())
 				.limit(perRoleLimit))
+			.toList();
+	}
+
+	/**
+	 * 역할(콘텐츠 유형)별로 서로 다른 상한을 적용해 최종 점수 상위 N개만 남긴다.
+	 * limits에 없는 유형은 defaultLimit을 적용한다.
+	 */
+	public List<ScoredCandidate> selectTopByRole(
+		final List<ScoredCandidate> scored,
+		final Map<TourApiContentType, Integer> limits,
+		final int defaultLimit
+	) {
+		return scored.stream()
+			.collect(Collectors.groupingBy(s -> s.candidate().contentType()))
+			.entrySet().stream()
+			.flatMap(entry -> entry.getValue().stream()
+				.sorted(Comparator.comparingDouble(ScoredCandidate::finalScore).reversed())
+				.limit(limits.getOrDefault(entry.getKey(), defaultLimit)))
 			.toList();
 	}
 

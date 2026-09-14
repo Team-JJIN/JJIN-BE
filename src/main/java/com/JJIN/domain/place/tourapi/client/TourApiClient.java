@@ -9,12 +9,15 @@ import com.JJIN.domain.place.tourapi.dto.TourApiPage;
 import com.JJIN.domain.place.tourapi.dto.TourApiPlaceItem;
 import com.JJIN.domain.place.tourapi.query.AreaPlaceQuery;
 import com.JJIN.domain.place.tourapi.query.FestivalQuery;
+import com.JJIN.domain.place.tourapi.query.KeywordSearchQuery;
 
 public interface TourApiClient {
 
 	TourApiPage<TourApiPlaceItem> getAreaPlaces(PlaceLocale locale, AreaPlaceQuery query);
 
 	TourApiPage<TourApiPlaceItem> getFestivals(PlaceLocale locale, FestivalQuery query);
+
+	TourApiPage<TourApiPlaceItem> searchPlaces(PlaceLocale locale, KeywordSearchQuery query);
 
 	Optional<TourApiPlaceItem> getCommonDetail(PlaceLocale locale, String contentId);
 

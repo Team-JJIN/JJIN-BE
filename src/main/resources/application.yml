@@ -16,6 +16,7 @@ tour-api:
     page-size: 5000
     max-pages: 10
     lookback-days: 30
+    max-lookback-windows: 6
   attraction-concentration:
     service-path: TatsCnctrRateService
     operation: tatsCnctrRatedList

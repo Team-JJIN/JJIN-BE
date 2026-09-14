@@ -20,6 +20,7 @@ public record TourApiPlaceItem(
 	String lDongSignguCd,
 	String lclsSystm1,
 	String lclsSystm2,
+	String lclsSystm3,
 	String overview,
 	String eventstartdate,
 	String eventenddate

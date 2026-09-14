@@ -4,7 +4,7 @@ import java.time.LocalDate;
 
 import com.JJIN.domain.onboarding.entity.enums.ExperienceLevel;
 import com.JJIN.domain.onboarding.entity.enums.TourApiContentType;
-import com.JJIN.domain.place.dto.WeeklySchedule;
+import com.JJIN.domain.place.schedule.WeeklySchedule;
 import com.JJIN.domain.place.entity.enums.OperatingInfoParseStatus;
 import com.JJIN.global.geo.GeoPoint;
 
