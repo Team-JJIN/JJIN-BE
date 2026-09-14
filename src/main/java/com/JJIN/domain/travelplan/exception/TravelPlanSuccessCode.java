@@ -18,6 +18,7 @@ public enum TravelPlanSuccessCode implements BaseCode {
 	COURSE_STOP_ADD_SUCCESS(HttpStatus.CREATED, "여행 코스에 방문지를 추가했습니다."),
 	COURSE_STOP_DELETE_SUCCESS(HttpStatus.OK, "여행 코스에서 방문지를 삭제했습니다."),
 	COURSE_STOP_REORDER_SUCCESS(HttpStatus.OK, "여행 코스 방문지 순번을 수정했습니다."),
+	COURSE_GENERATE_SUCCESS(HttpStatus.CREATED, "여행 코스를 생성했습니다."),
 	;
 
 	private final HttpStatus httpStatus;

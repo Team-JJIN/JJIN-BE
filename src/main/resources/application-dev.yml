@@ -85,6 +85,11 @@ runyour:
   api-key: ${RUNYOUR_AI_API_KEY}
   model: ${RUNYOUR_AI_MODEL}
 
+kakao:
+  mobility:
+    base-url: https://apis-navi.kakaomobility.com
+    rest-api-key: ${KAKAO_MOBILITY_API_KEY}
+
 springdoc:
   swagger-ui:
     path: /swagger-ui.html

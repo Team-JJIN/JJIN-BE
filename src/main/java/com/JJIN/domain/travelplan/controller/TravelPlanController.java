@@ -19,6 +19,7 @@ import com.JJIN.domain.travelplan.dto.request.AddCourseStopRequest;
 import com.JJIN.domain.travelplan.dto.request.CreateTravelPlanRequest;
 import com.JJIN.domain.travelplan.dto.request.ReorderCourseStopsRequest;
 import com.JJIN.domain.travelplan.dto.response.AddCourseStopResponse;
+import com.JJIN.domain.travelplan.dto.response.GenerateCourseResponse;
 import com.JJIN.domain.travelplan.dto.response.CreateTravelPlanResponse;
 import com.JJIN.domain.travelplan.dto.response.TravelCourseDayResponse;
 import com.JJIN.domain.travelplan.dto.response.TravelPlanListResponse;
@@ -89,6 +90,22 @@ public class TravelPlanController implements TravelPlanControllerDocs {
 				TravelPlanSuccessCode.TRAVEL_COURSE_DAY_SUCCESS,
 				travelCourseService.getCourseDay(currentAuth.memberId(), planId, dayNumber, locale)
 			)
+		);
+	}
+
+	@Override
+	@PostMapping("/{planId}/course/generate")
+	public ResponseEntity<SuccessResponse<GenerateCourseResponse>> generateCourse(
+		@CurrentMember CurrentAuth currentAuth,
+		@PathVariable Long planId,
+		@RequestParam(name = "locale", defaultValue = "KO") PlaceLocale locale
+	) {
+		validateCurrentAuth(currentAuth);
+
+		GenerateCourseResponse response = travelCourseService.generateCourse(
+			currentAuth.memberId(), planId, locale);
+		return ResponseEntity.status(HttpStatus.CREATED).body(
+			SuccessResponse.of(TravelPlanSuccessCode.COURSE_GENERATE_SUCCESS, response)
 		);
 	}
 

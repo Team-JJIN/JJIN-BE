@@ -12,6 +12,7 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.JJIN.domain.onboarding.entity.TravelPlan;
@@ -24,10 +25,13 @@ import com.JJIN.domain.place.repository.PlaceLocalizedContentRepository;
 import com.JJIN.domain.place.repository.PlaceOperatingInfoRepository;
 import com.JJIN.domain.place.repository.PlaceRepository;
 import com.JJIN.domain.place.schedule.PlaceOpenStatusResolver;
+import com.JJIN.domain.recommendation.dto.CourseDraft;
+import com.JJIN.domain.recommendation.service.RecommendationOrchestrator;
 import com.JJIN.domain.travelplan.dto.request.AddCourseStopRequest;
 import com.JJIN.domain.travelplan.dto.request.ReorderCourseStopsRequest;
 import com.JJIN.domain.travelplan.dto.response.AddCourseStopResponse;
 import com.JJIN.domain.travelplan.dto.response.CourseStopResponse;
+import com.JJIN.domain.travelplan.dto.response.GenerateCourseResponse;
 import com.JJIN.domain.travelplan.dto.response.TravelCourseDayResponse;
 import com.JJIN.domain.travelplan.entity.TravelCourseStop;
 import com.JJIN.domain.travelplan.exception.TravelPlanErrorCode;
@@ -54,11 +58,13 @@ public class TravelCourseService {
 	private final PlaceLocalizedContentRepository localizedContentRepository;
 	private final PlaceOperatingInfoRepository operatingInfoRepository;
 	private final PlaceOpenStatusResolver openStatusResolver;
+	private final RecommendationOrchestrator recommendationOrchestrator;
 	private final Clock clock;
 
 	/**
 	 * 특정 여행 일정의 n일차 코스를 조회한다.
 	 * 두 번째 방문지부터는 이전 방문지와의 하버사인 직선거리(m)를 정수로 계산해 함께 반환한다.
+	 * 코스는 생성 언어로 저장되므로, 조회 언어 콘텐츠가 없으면 KO → 저장된 언어 순으로 폴백한다.
 	 */
 	@Transactional(readOnly = true)
 	public TravelCourseDayResponse getCourseDay(
@@ -93,6 +99,63 @@ public class TravelCourseService {
 			stopResponses.size(),
 			stopResponses
 		);
+	}
+
+	/**
+	 * 추천 파이프라인을 실행해 여행 일자별 코스를 자동 생성하고 저장한다.
+	 * 재생성 시 기존 코스는 모두 삭제 후 새로 저장한다.
+	 */
+	// 후보 조회 워커가 REQUIRES_NEW 트랜잭션으로 새 Place를 커밋하므로,
+	// 바깥 트랜잭션이 기본 격리수준(REPEATABLE READ)이면 자기 스냅샷 이후 커밋된 행을 보지 못해
+	// 첫 조회에서 후보가 0건이 된다(콜드스타트 실패). READ_COMMITTED로 매 조회가 최신 커밋을 보게 한다.
+	@Transactional(isolation = Isolation.READ_COMMITTED)
+	public GenerateCourseResponse generateCourse(
+		final Long memberId,
+		final Long planId,
+		final PlaceLocale locale
+	) {
+		TravelPlan plan = travelPlanRepository.findById(planId)
+			.orElseThrow(() -> new JjinException(TravelPlanErrorCode.TRAVEL_PLAN_NOT_FOUND));
+
+		if (!plan.getMember().getId().equals(memberId)) {
+			throw new JjinException(TravelPlanErrorCode.TRAVEL_PLAN_FORBIDDEN);
+		}
+
+		CourseDraft draft = recommendationOrchestrator.recommend(plan, memberId, locale);
+		if (draft == null || draft.days() == null || draft.days().isEmpty()) {
+			throw new JjinException(TravelPlanErrorCode.COURSE_GENERATION_FAILED);
+		}
+
+		courseStopRepository.deleteAllByTravelPlanId(planId);
+		courseStopRepository.flush();
+
+		List<GenerateCourseResponse.DaySummary> daySummaries = new ArrayList<>();
+		int totalStops = 0;
+
+		for (CourseDraft.DayPlan day : draft.days()) {
+			List<CourseDraft.PlannedVisit> visits = day.visits() == null ? List.of() : day.visits();
+			List<Long> placeIds = visits.stream()
+				.map(CourseDraft.PlannedVisit::placeId)
+				.filter(id -> id != null)
+				.toList();
+			Map<Long, Place> placeById = placeRepository.findAllById(placeIds).stream()
+				.collect(Collectors.toMap(Place::getId, Function.identity(), (a, b) -> a));
+
+			int order = 0;
+			for (CourseDraft.PlannedVisit visit : visits) {
+				Place place = placeById.get(visit.placeId());
+				if (place == null) {
+					continue;
+				}
+				order++;
+				courseStopRepository.save(
+					TravelCourseStop.create(plan, day.dayNumber(), order, place));
+			}
+			daySummaries.add(new GenerateCourseResponse.DaySummary(day.dayNumber(), order));
+			totalStops += order;
+		}
+
+		return new GenerateCourseResponse(planId, daySummaries.size(), totalStops, daySummaries);
 	}
 
 	/**

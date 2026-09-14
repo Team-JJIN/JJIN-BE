@@ -12,6 +12,7 @@ import com.JJIN.domain.travelplan.entity.TravelCourseStop;
 
 public interface TravelCourseStopRepository extends JpaRepository<TravelCourseStop, Long> {
 
+	/** 코스 재생성 시 기존 방문지를 모두 지운다. */
 	@Modifying
 	@Query("delete from TravelCourseStop s where s.travelPlan.id = :travelPlanId")
 	void deleteAllByTravelPlanId(@Param("travelPlanId") Long travelPlanId);

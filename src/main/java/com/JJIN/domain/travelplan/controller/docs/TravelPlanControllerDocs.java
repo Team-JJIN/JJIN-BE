@@ -8,6 +8,7 @@ import com.JJIN.domain.travelplan.dto.request.CreateTravelPlanRequest;
 import com.JJIN.domain.travelplan.dto.request.ReorderCourseStopsRequest;
 import com.JJIN.domain.travelplan.dto.response.AddCourseStopResponse;
 import com.JJIN.domain.travelplan.dto.response.CreateTravelPlanResponse;
+import com.JJIN.domain.travelplan.dto.response.GenerateCourseResponse;
 import com.JJIN.domain.travelplan.dto.response.TravelCourseDayResponse;
 import com.JJIN.domain.travelplan.dto.response.TravelPlanListResponse;
 import com.JJIN.global.auth.dto.CurrentAuth;
@@ -176,6 +177,53 @@ public interface TravelPlanControllerDocs {
 		@Parameter(description = "여행 일정 ID", example = "42") Long planId,
 		@Parameter(description = "1부터 시작하는 일차 번호. 생략 시 1", example = "1") int dayNumber,
 		@Parameter(description = "표시 언어 (KO, EN, JA). 기본값 KO", example = "KO") PlaceLocale locale
+	);
+
+	@Operation(
+		summary = "여행 코스 자동 생성",
+		description = """
+			추천 파이프라인을 실행해 여행 일자별 코스를 자동 생성·저장한다.
+			여행 프로파일 정규화 → 시군구 선정 → 후보 조회 → 하드 필터 → 스코어링 → LLM 코스 조립 →
+			이동시간/운영시간 검증을 거쳐 일자별 방문지를 확정한다.
+			locale(KO/EN/JA)로 후보 장소를 해당 언어로 동기화하며, 코스는 생성 언어로 저장된다.
+			재생성 시 기존 코스는 모두 삭제 후 새로 저장한다.
+			상세 방문지 목록은 일자별 코스 조회 API로 확인한다.
+			""",
+		security = @SecurityRequirement(name = "BearerAuth")
+	)
+	@ApiResponses({
+		@ApiResponse(
+			responseCode = "201",
+			description = "코스 생성 성공",
+			content = @Content(
+				mediaType = "application/json",
+				examples = @ExampleObject(value = """
+					{
+					  "status": 201,
+					  "message": "여행 코스를 생성했습니다.",
+					  "data": {
+					    "planId": 42,
+					    "totalDays": 3,
+					    "totalStops": 12,
+					    "days": [
+					      { "dayNumber": 1, "stopCount": 4 },
+					      { "dayNumber": 2, "stopCount": 4 },
+					      { "dayNumber": 3, "stopCount": 4 }
+					    ]
+					  }
+					}
+					""")
+			)
+		),
+		@ApiResponse(responseCode = "401", description = "인증 정보가 없거나 유효하지 않음"),
+		@ApiResponse(responseCode = "403", description = "본인의 여행 일정만 생성 가능"),
+		@ApiResponse(responseCode = "404", description = "여행 일정을 찾을 수 없음"),
+		@ApiResponse(responseCode = "422", description = "조건에 맞는 장소 후보가 부족해 코스를 생성하지 못함")
+	})
+	ResponseEntity<SuccessResponse<GenerateCourseResponse>> generateCourse(
+		CurrentAuth currentAuth,
+		@Parameter(description = "여행 일정 ID", example = "42") Long planId,
+		@Parameter(description = "생성 언어 (KO, EN, JA). 기본값 KO", example = "KO") PlaceLocale locale
 	);
 
 	@Operation(

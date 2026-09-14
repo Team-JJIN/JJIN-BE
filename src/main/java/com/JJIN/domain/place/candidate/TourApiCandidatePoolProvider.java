@@ -27,25 +27,24 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 public class TourApiCandidatePoolProvider implements CandidatePoolProvider {
 
+	// 의료관광 세분류 접두어(EX050800 병원·의원·성형외과·피부과 등). 코스 후보에서 제외한다.
+	private static final String MEDICAL_LCLS3_PREFIX = "EX0508";
+
 	private final CachedTourApiGateway tourApiGateway;
 	private final PlaceSyncService placeSyncService;
 	private final CandidateDisplayService candidateDisplayService;
 
 	@Override
 	public CandidatePool getCandidates(final CandidatePoolQuery query) {
+		// 요청 언어를 주 소스로 사용해 그 언어 TourAPI 서비스에서 직접 후보를 가져온다.
+		// (그 언어에 후보가 나오도록 보장. 해당 콘텐츠 유형이 그 언어를 지원하지 않으면 KO로 폴백)
+		PlaceLocale sourceLocale = query.displayLocale() != PlaceLocale.KO
+			&& query.contentType().supports(query.displayLocale())
+			? query.displayLocale() : PlaceLocale.KO;
 		try {
-			List<PlaceCandidate> koreanCandidates = fetchAndSync(PlaceLocale.KO, query);
+			List<PlaceCandidate> sourced = fetchAndSync(sourceLocale, query);
 
-			if (query.displayLocale() != PlaceLocale.KO
-				&& query.contentType().supports(query.displayLocale())) {
-				try {
-					fetchAndSync(query.displayLocale(), query);
-				} catch (TourApiClientException exception) {
-					log.warn("TourAPI 번역 데이터 갱신 실패: locale={}", query.displayLocale());
-				}
-			}
-
-			List<PlaceCandidate> candidates = filterAndDeduplicate(koreanCandidates, query);
+			List<PlaceCandidate> candidates = filterAndDeduplicate(sourced, query);
 			candidates = candidateDisplayService.localize(candidates, query.displayLocale());
 			return new CandidatePool(candidates);
 		} catch (TourApiClientException exception) {
@@ -66,13 +65,22 @@ public class TourApiCandidatePoolProvider implements CandidatePoolProvider {
 
 		for (int pageNo = 1; pageNo <= query.maxPages(); pageNo++) {
 			TourApiPage<TourApiPlaceItem> page = fetchPage(locale, query, pageNo);
-			candidates.addAll(placeSyncService.syncPlaces(locale, page.items()));
+			// 의료(성형외과·피부과·병원 등, lclsSystm3=EX0508xx)는 관광지로 분류돼 있으나 코스 후보에서 제외한다.
+			List<TourApiPlaceItem> items = page.items().stream()
+				.filter(item -> !isMedical(item))
+				.toList();
+			candidates.addAll(placeSyncService.syncPlaces(locale, items));
 
 			if (!page.hasNext()) {
 				break;
 			}
 		}
 		return candidates;
+	}
+
+	/** 의료관광 세분류(EX0508xx: 병원·의원·성형외과·피부과 등) 여부. 온천·스파(EX0501/EX0505)는 제외 대상 아님 */
+	private boolean isMedical(final TourApiPlaceItem item) {
+		return item.lclsSystm3() != null && item.lclsSystm3().startsWith(MEDICAL_LCLS3_PREFIX);
 	}
 
 	private TourApiPage<TourApiPlaceItem> fetchPage(

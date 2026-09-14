@@ -25,6 +25,8 @@ public enum TravelPlanErrorCode implements BaseCode {
 	COURSE_STOP_NOT_FOUND(HttpStatus.NOT_FOUND, "코스 방문지를 찾을 수 없습니다."),
 	INVALID_STOP_ORDER(HttpStatus.BAD_REQUEST,
 		"순번 요청이 올바르지 않습니다. 같은 일차의 모든 방문지를 1..N 순번으로 빠짐없이 포함해야 합니다."),
+	COURSE_GENERATION_FAILED(HttpStatus.UNPROCESSABLE_ENTITY,
+		"여행 코스를 생성하지 못했습니다. 조건에 맞는 장소 후보가 부족할 수 있습니다."),
 	;
 
 	private final HttpStatus httpStatus;
