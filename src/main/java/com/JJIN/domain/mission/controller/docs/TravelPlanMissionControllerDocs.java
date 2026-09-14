@@ -24,8 +24,12 @@ public interface TravelPlanMissionControllerDocs {
 	@Operation(
 		summary = "일정 미션 사진 인증",
 		description = """
+			인증 화면의 미션 제목은 이전 일정 미션 목록 조회 응답의 title을 전달받아 표시한다.
+			촬영한 사진은 클라이언트에서 미리보기로 표시하며, 이 단계에서 인증 사진 조회 API를 호출할 필요는 없다.
+			사진 촬영 후 POST /api/missions/proofs/presigned-url로 업로드 URL을 발급받고 해당 URL로 S3에 직접 PUT 업로드한다.
 			인증 화면에서 사진을 S3에 업로드한 뒤 '인증 완료'를 누르면 호출한다.
 			Presigned URL 응답의 fileName을 proofImageKey로 전달한다.
+			미션 제목과 피드 제목·내용은 요청에 포함하지 않는다.
 			사진 key와 인증 시각을 저장하고 PROOF_REQUIRED에서 UPLOAD_PENDING으로 변경한다.
 			피드 게시글을 생성하거나 COMPLETED로 변경하지 않는다. 피드 미게시 선택 시에도 UPLOAD_PENDING을 유지한다.
 			사진 key 형식만 검증하며 실제 S3 업로드 여부나 사진 내용의 진위는 검사하지 않는다.
@@ -71,7 +75,9 @@ public interface TravelPlanMissionControllerDocs {
 		summary = "일정 미션 인증 사진 조회",
 		description = """
 			본인 일정 미션의 제목, 상태와 인증 사진 정보를 조회한다.
-			인증 화면과 피드 작성 화면 진입 시 호출한다. 피드 제목과 내용은 반환하지 않는다.
+			피드 작성 화면 진입 또는 저장된 인증 사진을 다시 표시할 때 호출한다. 피드 제목과 내용은 반환하지 않는다.
+			최초 인증 화면 진입 시에는 이전 일정 미션 목록 조회 응답의 title을 사용하므로 이 API 호출은 필요하지 않다.
+			촬영 직후 사진은 클라이언트 미리보기로 표시한다. 인증 완료 API 호출 전에는 사진 key가 DB에 저장되지 않는다.
 			사진 인증 전에도 200으로 미션 제목과 상태를 반환하며 사진 key, URL과 인증 시각은 null이다.
 			인증 후 proofImageUrl은 조회할 때마다 발급하는 1시간 유효 Presigned GET URL이다.
 			조회로 미션 상태를 변경하지 않는다.
@@ -134,6 +140,7 @@ public interface TravelPlanMissionControllerDocs {
 			지원 상태는 PROOF_REQUIRED(인증 필요), UPLOAD_PENDING(피드 업로드 대기), COMPLETED(완료)이다.
 			상태별 개수는 status 필터 여부와 무관하게 전체 일정 미션을 기준으로 반환한다.
 			각 미션의 태그 목록을 tags로 반환하며 태그가 없으면 빈 배열을 반환한다.
+			'인증하기' 선택 시 userMissionId와 title을 인증 화면으로 전달하여 제목을 표시한다.
 			완료 미션은 해당 회원이 그 미션에 작성한 최신 인증글 ID를 missionProofId로 반환한다.
 			""",
 		security = @SecurityRequirement(name = "BearerAuth")

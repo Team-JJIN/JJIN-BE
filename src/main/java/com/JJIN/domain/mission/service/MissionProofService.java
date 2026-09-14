@@ -55,7 +55,7 @@ public class MissionProofService {
 	private static final ZoneId KST = ZoneId.of("Asia/Seoul");
 	private static final String MISSION_PROOF_IMAGE_PREFIX = "mission-proof/";
 	private static final Set<String> ALLOWED_IMAGE_CONTENT_TYPES = Set.of(
-		"image/jpeg", "image/jpg", "image/png", "image/gif", "image/webp"
+		"image/jpeg", "image/jpg", "image/png", "image/gif", "image/webp", "image/heic"
 	);
 
 	private final MissionProofRepository missionProofRepository;

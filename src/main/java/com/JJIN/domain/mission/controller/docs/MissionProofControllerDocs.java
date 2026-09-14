@@ -31,7 +31,7 @@ public interface MissionProofControllerDocs {
 		description = """
 			미션 인증 피드에 사용할 사진을 S3에 직접 PUT 업로드할 수 있는 Presigned URL을 발급한다.
 
-			- 지원 형식: image/jpeg, image/jpg, image/png, image/gif, image/webp
+			- 지원 형식: image/jpeg, image/jpg, image/png, image/gif, image/webp, image/heic
 			- URL 유효시간: 1시간
 			- 응답의 fileName은 실제 S3 객체 key이며, 인증 피드 생성 시 이미지 식별값으로 사용한다.
 			- 업로드 PUT 요청의 Content-Type은 발급 요청의 contentType과 동일해야 한다.
