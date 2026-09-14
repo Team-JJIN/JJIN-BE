@@ -12,6 +12,10 @@ import com.JJIN.domain.travelplan.entity.TravelCourseStop;
 
 public interface TravelCourseStopRepository extends JpaRepository<TravelCourseStop, Long> {
 
+	@Modifying
+	@Query("delete from TravelCourseStop s where s.travelPlan.id = :travelPlanId")
+	void deleteAllByTravelPlanId(@Param("travelPlanId") Long travelPlanId);
+
 	List<TravelCourseStop> findAllByTravelPlanIdAndDayNumberOrderByVisitOrderAsc(
 		Long travelPlanId,
 		int dayNumber

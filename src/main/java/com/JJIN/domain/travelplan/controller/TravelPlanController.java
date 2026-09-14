@@ -138,6 +138,20 @@ public class TravelPlanController implements TravelPlanControllerDocs {
 		);
 	}
 
+	@Override
+	@DeleteMapping("/{travelPlanId}")
+	public ResponseEntity<SuccessResponse<Void>> deleteTravelPlan(
+		@CurrentMember CurrentAuth currentAuth,
+		@PathVariable Long travelPlanId
+	) {
+		validateCurrentAuth(currentAuth);
+		travelPlanService.delete(currentAuth.memberId(), travelPlanId);
+
+		return ResponseEntity.ok(
+			SuccessResponse.of(TravelPlanSuccessCode.TRAVEL_PLAN_DELETE_SUCCESS, null)
+		);
+	}
+
 	private void validateCurrentAuth(final CurrentAuth currentAuth) {
 		if (currentAuth == null) {
 			throw new JjinException(TokenErrorCode.INVALID_AUTHORIZATION_HEADER);

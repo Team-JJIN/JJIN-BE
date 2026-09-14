@@ -281,4 +281,36 @@ public interface TravelPlanControllerDocs {
 		@Parameter(description = "여행 일정 ID", example = "42") Long planId,
 		@Parameter(description = "삭제할 코스 방문지 ID", example = "12") Long stopId
 	);
+
+	@Operation(
+		summary = "여행 일정 삭제",
+		description = """
+			로그인한 회원이 소유한 여행 일정을 삭제한다.
+			일정의 취향 정보, 일정에 담긴 미션과 코스 방문지 관계도 함께 삭제되며, 장소 원본과 이미 작성된 미션 인증 피드는 보존한다.
+			존재하지 않거나 본인 소유가 아닌 일정은 동일하게 찾을 수 없음으로 처리한다.
+			""",
+		security = @SecurityRequirement(name = "BearerAuth")
+	)
+	@ApiResponses({
+		@ApiResponse(
+			responseCode = "200",
+			description = "여행 일정 삭제 성공",
+			content = @Content(
+				mediaType = "application/json",
+				examples = @ExampleObject(value = """
+					{
+					  "status": 200,
+					  "message": "여행 일정을 삭제했습니다.",
+					  "data": null
+					}
+					""")
+			)
+		),
+		@ApiResponse(responseCode = "401", description = "인증 정보가 없거나 유효하지 않음"),
+		@ApiResponse(responseCode = "404", description = "여행 일정을 찾을 수 없거나 본인 소유가 아님")
+	})
+	ResponseEntity<SuccessResponse<Void>> deleteTravelPlan(
+		CurrentAuth currentAuth,
+		@Parameter(description = "삭제할 여행 일정 ID", example = "1") Long travelPlanId
+	);
 }
