@@ -96,6 +96,11 @@ public class AiMissionRecommendationService {
 
 		List<String> coursePlaces = buildCoursePlaceLabels(travelPlanId);
 
+		// 코스가 비어 있으면 추천할 기준이 없으므로, LLM 호출 없이 미션 목록을 null로 반환한다.
+		if (coursePlaces.isEmpty()) {
+			return TravelPlanMissionListResponse.of(plan, 0, 0, 0, 0, null);
+		}
+
 		// 이미 이 일정에 배정된 미션은 후보에서 제외
 		Set<Long> assigned = userMissionRepository.findAllByTravelPlanIdOrderByAddedAtDescIdDesc(travelPlanId)
 			.stream().map(um -> um.getMission().getId()).collect(Collectors.toSet());
