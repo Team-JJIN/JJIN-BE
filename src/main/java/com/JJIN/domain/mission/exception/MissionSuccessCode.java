@@ -31,6 +31,7 @@ public enum MissionSuccessCode implements BaseCode {
 	TRAVEL_PLAN_MISSION_DELETE_SUCCESS(HttpStatus.OK, "일정에서 미션을 삭제했습니다."),
 	TRAVEL_PLAN_MISSION_AUTHENTICATE_SUCCESS(HttpStatus.OK, "일정 미션을 인증했습니다."),
 	TRAVEL_PLAN_MISSION_AUTHENTICATION_GET_SUCCESS(HttpStatus.OK, "일정 미션 인증 사진을 조회했습니다."),
+	TRAVEL_PLAN_MISSION_RECOMMEND_SUCCESS(HttpStatus.OK, "AI가 일정에 맞는 미션을 추천했습니다."),
 	;
 
 	private final HttpStatus httpStatus;

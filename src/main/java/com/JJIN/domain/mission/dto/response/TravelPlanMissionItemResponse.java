@@ -56,4 +56,21 @@ public record TravelPlanMissionItemResponse(
 			missionProofId
 		);
 	}
+
+	public static TravelPlanMissionItemResponse ofRecommendation(
+		final com.JJIN.domain.mission.entity.Mission mission,
+		final List<String> tags
+	) {
+		return new TravelPlanMissionItemResponse(
+			null,
+			mission.getId(),
+			mission.getTitle(),
+			mission.getDescription(),
+			mission.getImageUrl(),
+			tags,
+			mission.getDifficulty(),
+			null,
+			null
+		);
+	}
 }
