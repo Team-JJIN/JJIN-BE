@@ -19,4 +19,6 @@ public interface MissionRepository extends JpaRepository<Mission, Long>, Mission
 	Optional<Mission> findByIdAndStatus(Long id, MissionStatus status);
 
 	List<Mission> findAllByIdInAndStatus(Collection<Long> ids, MissionStatus status);
+
+	List<Mission> findAllByStatus(MissionStatus status);
 }

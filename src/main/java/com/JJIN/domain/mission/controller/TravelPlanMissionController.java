@@ -16,6 +16,7 @@ import com.JJIN.domain.mission.dto.response.TravelPlanMissionAuthenticationRespo
 import com.JJIN.domain.mission.dto.response.TravelPlanMissionListResponse;
 import com.JJIN.domain.mission.entity.enums.UserMissionStatus;
 import com.JJIN.domain.mission.exception.MissionSuccessCode;
+import com.JJIN.domain.mission.service.AiMissionRecommendationService;
 import com.JJIN.domain.mission.service.TravelPlanMissionService;
 import com.JJIN.global.auth.annotation.CurrentMember;
 import com.JJIN.global.auth.dto.CurrentAuth;
@@ -32,6 +33,7 @@ import lombok.RequiredArgsConstructor;
 public class TravelPlanMissionController implements TravelPlanMissionControllerDocs {
 
 	private final TravelPlanMissionService travelPlanMissionService;
+	private final AiMissionRecommendationService aiMissionRecommendationService;
 
 	@Override
 	@PostMapping("/{userMissionId}/authenticate")
@@ -92,6 +94,18 @@ public class TravelPlanMissionController implements TravelPlanMissionControllerD
 		validateCurrentAuth(currentAuth);
 		travelPlanMissionService.deleteTravelPlanMission(currentAuth.memberId(), travelPlanId, userMissionId);
 		return ResponseEntity.ok(SuccessResponse.of(MissionSuccessCode.TRAVEL_PLAN_MISSION_DELETE_SUCCESS));
+	}
+
+	@GetMapping("/recommendations")
+	public ResponseEntity<SuccessResponse<TravelPlanMissionListResponse>> recommendTravelPlanMissions(
+		@CurrentMember CurrentAuth currentAuth,
+		@PathVariable Long travelPlanId
+	) {
+		validateCurrentAuth(currentAuth);
+		return ResponseEntity.ok(SuccessResponse.of(
+			MissionSuccessCode.TRAVEL_PLAN_MISSION_RECOMMEND_SUCCESS,
+			aiMissionRecommendationService.recommend(currentAuth.memberId(), travelPlanId)
+		));
 	}
 
 	private void validateCurrentAuth(final CurrentAuth currentAuth) {
