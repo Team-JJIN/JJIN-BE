@@ -1,5 +1,6 @@
 package com.JJIN.domain.mission.controller;
 
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -12,6 +13,8 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.JJIN.domain.mission.controller.docs.TravelPlanMissionControllerDocs;
 import com.JJIN.domain.mission.dto.request.TravelPlanMissionAuthenticateRequest;
+import com.JJIN.domain.mission.dto.request.TravelPlanMissionFeedUploadRequest;
+import com.JJIN.domain.mission.dto.response.TravelPlanMissionFeedUploadResponse;
 import com.JJIN.domain.mission.dto.response.TravelPlanMissionAuthenticationResponse;
 import com.JJIN.domain.mission.dto.response.TravelPlanMissionListResponse;
 import com.JJIN.domain.mission.entity.enums.UserMissionStatus;
@@ -105,6 +108,22 @@ public class TravelPlanMissionController implements TravelPlanMissionControllerD
 		return ResponseEntity.ok(SuccessResponse.of(
 			MissionSuccessCode.TRAVEL_PLAN_MISSION_RECOMMEND_SUCCESS,
 			aiMissionRecommendationService.recommend(currentAuth.memberId(), travelPlanId)
+		));
+	}
+
+	@PostMapping("/{userMissionId}/feed")
+	public ResponseEntity<SuccessResponse<TravelPlanMissionFeedUploadResponse>> uploadTravelPlanMissionFeed(
+		@CurrentMember CurrentAuth currentAuth,
+		@PathVariable Long travelPlanId,
+		@PathVariable Long userMissionId,
+		@Valid @RequestBody TravelPlanMissionFeedUploadRequest request
+	) {
+		validateCurrentAuth(currentAuth);
+		return ResponseEntity.status(HttpStatus.CREATED).body(SuccessResponse.of(
+			MissionSuccessCode.TRAVEL_PLAN_MISSION_FEED_UPLOAD_SUCCESS,
+			travelPlanMissionService.uploadTravelPlanMissionFeed(
+				currentAuth.memberId(), travelPlanId, userMissionId, request.content()
+			)
 		));
 	}
 

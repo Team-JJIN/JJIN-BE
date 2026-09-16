@@ -37,6 +37,7 @@ public enum MissionErrorCode implements BaseCode {
 	409 CONFLICT
 	 */
 	USER_MISSION_AUTHENTICATION_CONFLICT(HttpStatus.CONFLICT, "이미 인증된 일정 미션입니다."),
+	USER_MISSION_NOT_UPLOAD_PENDING(HttpStatus.CONFLICT, "사진 인증 후 업로드 대기 상태에서만 피드에 업로드할 수 있습니다."),
 
 	/*
 	500 INTERNAL SERVER ERROR
