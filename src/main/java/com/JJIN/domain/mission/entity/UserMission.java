@@ -76,8 +76,8 @@ public class UserMission {
 	@Column
 	private LocalDateTime completedAt;
 
-	@Column(name = "proof_image_key", length = 2048)
-	private String proofImageKey;
+	@Column(name = "proof_image_url", length = 2048)
+	private String proofImageUrl;
 
 	@Column(name = "authenticated_at")
 	private LocalDateTime authenticatedAt;
@@ -102,14 +102,14 @@ public class UserMission {
 	/**
 	 * 사진 인증 결과를 보관하며 동일한 사진으로 재시도하면 기존 결과를 유지한다.
 	 */
-	public void authenticate(final String proofImageKey, final LocalDateTime authenticatedAt) {
-		if (status == UserMissionStatus.UPLOAD_PENDING && proofImageKey.equals(this.proofImageKey)) {
+	public void authenticate(final String proofImageUrl, final LocalDateTime authenticatedAt) {
+		if (status == UserMissionStatus.UPLOAD_PENDING && proofImageUrl.equals(this.proofImageUrl)) {
 			return;
 		}
 		if (status != UserMissionStatus.PROOF_REQUIRED) {
 			throw new JjinException(MissionErrorCode.USER_MISSION_AUTHENTICATION_CONFLICT);
 		}
-		this.proofImageKey = proofImageKey;
+		this.proofImageUrl = proofImageUrl;
 		this.authenticatedAt = authenticatedAt;
 		markUploadPending();
 	}

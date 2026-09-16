@@ -50,7 +50,7 @@ public class TravelPlanMissionController implements TravelPlanMissionControllerD
 		return ResponseEntity.ok(SuccessResponse.of(
 			MissionSuccessCode.TRAVEL_PLAN_MISSION_AUTHENTICATE_SUCCESS,
 			travelPlanMissionService.authenticateTravelPlanMission(
-				currentAuth.memberId(), travelPlanId, userMissionId, request.proofImageKey()
+				currentAuth.memberId(), travelPlanId, userMissionId, request.proofImageUrl()
 			)
 		));
 	}
