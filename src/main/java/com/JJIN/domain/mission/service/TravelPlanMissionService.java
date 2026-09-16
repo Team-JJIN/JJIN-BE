@@ -24,7 +24,6 @@ import com.JJIN.domain.mission.repository.UserMissionRepository;
 import com.JJIN.domain.onboarding.entity.TravelPlan;
 import com.JJIN.domain.onboarding.repository.TravelPlanRepository;
 import com.JJIN.global.exception.JjinException;
-import com.JJIN.global.s3.S3PresignedUrlService;
 
 import lombok.RequiredArgsConstructor;
 
@@ -37,21 +36,20 @@ public class TravelPlanMissionService {
 	private final MissionProofRepository missionProofRepository;
 	private final MissionTagMappingRepository missionTagMappingRepository;
 	private final Clock clock;
-	private final S3PresignedUrlService s3PresignedUrlService;
 
 	@Transactional
 	public TravelPlanMissionAuthenticationResponse authenticateTravelPlanMission(
 		final Long memberId,
 		final Long travelPlanId,
 		final Long userMissionId,
-		final String proofImageKey
+		final String proofImageUrl
 	) {
 		getOwnedTravelPlan(memberId, travelPlanId);
 		UserMission userMission = userMissionRepository
 			.findByIdAndTravelPlanIdForUpdate(userMissionId, travelPlanId)
 			.orElseThrow(() -> new JjinException(MissionErrorCode.USER_MISSION_NOT_FOUND));
-		userMission.authenticate(proofImageKey, LocalDateTime.now(clock));
-		return toAuthenticationResponse(userMission);
+		userMission.authenticate(proofImageUrl, LocalDateTime.now(clock));
+		return TravelPlanMissionAuthenticationResponse.of(userMission);
 	}
 
 	/**
@@ -71,7 +69,7 @@ public class TravelPlanMissionService {
 			.orElseThrow(() -> new JjinException(MissionErrorCode.USER_MISSION_NOT_FOUND));
 
 		if (userMission.getStatus() != UserMissionStatus.UPLOAD_PENDING
-			|| userMission.getProofImageKey() == null) {
+			|| userMission.getProofImageUrl() == null) {
 			throw new JjinException(MissionErrorCode.USER_MISSION_NOT_UPLOAD_PENDING);
 		}
 
@@ -80,7 +78,7 @@ public class TravelPlanMissionService {
 			userMission.getMission(),
 			userMission.getMember(),
 			content,
-			userMission.getProofImageKey()
+			userMission.getProofImageUrl()
 		));
 		userMission.complete();
 
@@ -96,18 +94,7 @@ public class TravelPlanMissionService {
 		getOwnedTravelPlan(memberId, travelPlanId);
 		UserMission userMission = userMissionRepository.findByIdAndTravelPlanId(userMissionId, travelPlanId)
 			.orElseThrow(() -> new JjinException(MissionErrorCode.USER_MISSION_NOT_FOUND));
-		return toAuthenticationResponse(userMission);
-	}
-
-	private TravelPlanMissionAuthenticationResponse toAuthenticationResponse(final UserMission userMission) {
-		String proofImageKey = userMission.getProofImageKey();
-		String proofImageUrl = proofImageKey == null
-			? null
-			: s3PresignedUrlService.generateGetPresignedUrl(proofImageKey);
-		return TravelPlanMissionAuthenticationResponse.of(
-			userMission,
-			proofImageUrl
-		);
+		return TravelPlanMissionAuthenticationResponse.of(userMission);
 	}
 
 	@Transactional(readOnly = true)

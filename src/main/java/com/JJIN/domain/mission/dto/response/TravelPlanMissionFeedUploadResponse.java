@@ -21,7 +21,7 @@ public record TravelPlanMissionFeedUploadResponse(
 	@Schema(description = "업로드 후 일정 미션 상태 (COMPLETED)", example = "COMPLETED")
 	UserMissionStatus status,
 
-	@Schema(description = "인증 사진 이미지 값")
+	@Schema(description = "DB에 저장된 인증 사진의 공개 raw URL")
 	String imageUrl,
 
 	@Schema(description = "피드에 올린 인증 문구", nullable = true)

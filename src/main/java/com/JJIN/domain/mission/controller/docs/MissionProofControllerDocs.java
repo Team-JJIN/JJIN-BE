@@ -33,7 +33,8 @@ public interface MissionProofControllerDocs {
 
 			- 지원 형식: image/jpeg, image/jpg, image/png, image/gif, image/webp, image/heic
 			- URL 유효시간: 1시간
-			- 응답의 fileName은 실제 S3 객체 key이며, 인증 피드 생성 시 이미지 식별값으로 사용한다.
+			- 응답의 fileName은 실제 S3 객체 key이다.
+			- 일정 미션 인증 요청의 proofImageUrl에는 업로드 URL에서 '?' 이후 서명 쿼리를 제거한 공개 raw URL을 전달한다.
 			- 업로드 PUT 요청의 Content-Type은 발급 요청의 contentType과 동일해야 한다.
 			""",
 		security = @SecurityRequirement(name = "BearerAuth")
