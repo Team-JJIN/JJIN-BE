@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.JJIN.domain.mission.dto.response.TravelPlanMissionAuthenticationResponse;
+import com.JJIN.domain.mission.dto.response.TravelPlanMissionFeedUploadResponse;
 import com.JJIN.domain.mission.dto.response.TravelPlanMissionItemResponse;
 import com.JJIN.domain.mission.dto.response.TravelPlanMissionListResponse;
 import com.JJIN.domain.mission.entity.MissionProof;
@@ -51,6 +52,39 @@ public class TravelPlanMissionService {
 			.orElseThrow(() -> new JjinException(MissionErrorCode.USER_MISSION_NOT_FOUND));
 		userMission.authenticate(proofImageKey, LocalDateTime.now(clock));
 		return toAuthenticationResponse(userMission);
+	}
+
+	/**
+	 * 사진 인증이 끝난(UPLOAD_PENDING) 일정 미션을 피드에 업로드한다.
+	 * 새 미션 인증글(MissionProof)을 생성하고 일정 미션 상태를 COMPLETED로 바꾼다.
+	 */
+	@Transactional
+	public TravelPlanMissionFeedUploadResponse uploadTravelPlanMissionFeed(
+		final Long memberId,
+		final Long travelPlanId,
+		final Long userMissionId,
+		final String content
+	) {
+		getOwnedTravelPlan(memberId, travelPlanId);
+		UserMission userMission = userMissionRepository
+			.findByIdAndTravelPlanIdForUpdate(userMissionId, travelPlanId)
+			.orElseThrow(() -> new JjinException(MissionErrorCode.USER_MISSION_NOT_FOUND));
+
+		if (userMission.getStatus() != UserMissionStatus.UPLOAD_PENDING
+			|| userMission.getProofImageKey() == null) {
+			throw new JjinException(MissionErrorCode.USER_MISSION_NOT_UPLOAD_PENDING);
+		}
+
+		// 인증 사진 값을 그대로 피드에 저장하고 상태를 완료로 전환한다.
+		MissionProof proof = missionProofRepository.save(MissionProof.of(
+			userMission.getMission(),
+			userMission.getMember(),
+			content,
+			userMission.getProofImageKey()
+		));
+		userMission.complete();
+
+		return TravelPlanMissionFeedUploadResponse.of(proof, userMission, proof.getImageUrl());
 	}
 
 	@Transactional(readOnly = true)
