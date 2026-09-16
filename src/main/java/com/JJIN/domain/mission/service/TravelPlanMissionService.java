@@ -69,7 +69,7 @@ public class TravelPlanMissionService {
 			.orElseThrow(() -> new JjinException(MissionErrorCode.USER_MISSION_NOT_FOUND));
 
 		if (userMission.getStatus() != UserMissionStatus.UPLOAD_PENDING
-			|| userMission.getProofImageKey() == null) {
+			|| userMission.getProofImageUrl() == null) {
 			throw new JjinException(MissionErrorCode.USER_MISSION_NOT_UPLOAD_PENDING);
 		}
 
@@ -78,7 +78,7 @@ public class TravelPlanMissionService {
 			userMission.getMission(),
 			userMission.getMember(),
 			content,
-			userMission.getProofImageKey()
+			userMission.getProofImageUrl()
 		));
 		userMission.complete();
 
