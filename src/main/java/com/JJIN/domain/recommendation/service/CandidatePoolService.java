@@ -70,10 +70,11 @@ public class CandidatePoolService {
 	}
 
 	/**
-	 * 사용자 목표 로컬도(targetLocality)에 가장 가까운 시군구를 앵커로 선정하고,
-	 * 앵커에 지리적으로 인접한 시군구를 필요 수(requiredDistrictCount)만큼 함께 선정한다.
+	 * 앵커 시군구를 정하고, 앵커에 지리적으로 인접한 시군구를 필요 수(requiredDistrictCount)만큼 함께 선정한다.
+	 * 앵커는 지역에 시군구가 지정돼 있으면(도시형) 그 시군구로 고정해 '고른 도시'를 코스 중심에 두고,
+	 * 시군구가 없으면(광역시형) regn 전체에서 목표 로컬도(targetLocality)에 가장 가까운 시군구를 앵커로 삼는다.
 	 * 인접 판정용 좌표는 DB에 적재된 시군구 대표 좌표를 쓰며, 좌표가 없으면 로컬도 근접 순으로 폴백한다.
-	 * 집중률 데이터가 없으면 여행 지역에 지정된 시군구(있으면)로 폴백한다.
+	 * 방문자수 데이터가 없으면 여행 지역에 지정된 시군구(있으면)로 폴백한다.
 	 */
 	public List<String> selectDistricts(
 		final TravelProfile profile,
@@ -93,13 +94,18 @@ public class CandidatePoolService {
 		double target = profile.targetLocality();
 		int needed = Math.min(MAX_DISTRICTS, Math.max(1, profile.requiredDistrictCount()));
 
-		// 로컬도 목표에 가장 가까운 시군구를 앵커로
-		String anchor = ratios.entrySet().stream()
-			.min(Comparator.comparingDouble(e -> Math.abs(e.getValue() - target)))
-			.map(Map.Entry::getKey)
-			.orElseThrow();
-
 		String regionCode = region.getLDongRegnCd();
+		String signguCode = region.getLDongSignguCd();
+
+		// 시군구가 지정된 도시형 지역은 그 시군구를 앵커로 고정해 '고른 도시'를 코스 중심에 둔다.
+		// 시군구가 없는 광역시형 지역은 regn 전체에서 로컬도 목표에 가장 가까운 시군구를 앵커로 삼는다.
+		String anchor = signguCode != null && !signguCode.isBlank()
+			? signguCode
+			: ratios.entrySet().stream()
+				.min(Comparator.comparingDouble(e -> Math.abs(e.getValue() - target)))
+				.map(Map.Entry::getKey)
+				.orElseThrow();
+
 		GeoPoint anchorCentroid = districtCentroidProvider.centroid(regionCode + anchor);
 
 		List<String> selected = new ArrayList<>();
